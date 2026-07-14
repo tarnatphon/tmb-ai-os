@@ -3,12 +3,14 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from .api_v2 import router as milestone_2_router
 from .config import get_settings
 from .content import ContentRepository
 from .providers import GeminiGenerator
 from .service import ContentGenerationService
 
 app = FastAPI(title="TMB AI OS", version="0.1.0")
+app.include_router(milestone_2_router)
 
 
 class GenerateRequest(BaseModel):
