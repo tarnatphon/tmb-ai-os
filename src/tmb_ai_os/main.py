@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
 from .api import app as api_app
+from .lifecycle import application_lifespan
 
 
 @asynccontextmanager
@@ -15,7 +16,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 app = api_app
 app.title = "TMB AI OS"
 app.version = "0.4.0"
-app.router.lifespan_context = lifespan
+app.router.lifespan_context = application_lifespan
 
 
 DASHBOARD_HTML = """

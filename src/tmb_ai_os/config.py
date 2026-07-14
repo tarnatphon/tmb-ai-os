@@ -7,6 +7,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     env: str = "development"
     ai_provider: str = "gemini"
+    database_url: str = "sqlite:///data/tmb_ai_os.db"
+    app_timezone: str = "Asia/Bangkok"
+    scheduler_enabled: bool = False
+    scheduler_hour: int = 8
+    scheduler_minute: int = 0
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
     content_dir: Path = Path("content")
