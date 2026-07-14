@@ -1,13 +1,15 @@
-from app.core.config import settings
-from app.providers.base import AIProvider
-from app.providers.errors import ProviderConfigurationError
-from app.providers.gemini import GeminiProvider
+from tmb_ai_os.config import get_settings
+from tmb_ai_os.provider_adapter import TextGeneratorProviderAdapter
+from tmb_ai_os.provider_factory import create_text_generator
 
 
-def get_provider() -> AIProvider:
-    provider = settings.ai_provider.strip().lower()
-    if provider == "gemini":
-        return GeminiProvider()
-    raise ProviderConfigurationError(
-        f"Unsupported AI_PROVIDER '{settings.ai_provider}'. Supported providers: gemini"
+def get_provider() -> TextGeneratorProviderAdapter:
+    settings = get_settings()
+    generator = create_text_generator(settings=settings)
+    return TextGeneratorProviderAdapter(
+        generator=generator,
+        settings=settings,
     )
+
+
+__all__ = ["get_provider"]

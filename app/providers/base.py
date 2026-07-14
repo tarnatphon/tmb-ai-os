@@ -1,15 +1,11 @@
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from tmb_ai_os.provider_contracts import (
+    ContentProvider,
+    GenerationRequest,
+    GenerationResponse,
+)
 
-
-@dataclass(frozen=True)
-class GenerationResult:
-    text: str
-    model: str
-    provider: str
-
-
-class AIProvider(ABC):
-    @abstractmethod
-    def generate(self, *, system_prompt: str, user_prompt: str) -> GenerationResult:
-        raise NotImplementedError
+__all__ = [
+    "ContentProvider",
+    "GenerationRequest",
+    "GenerationResponse",
+]
