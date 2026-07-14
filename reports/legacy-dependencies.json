@@ -1,0 +1,16 @@
+{
+  "root": "/Users/ekky/Desktop/tmb-ai-os-foundation-v2",
+  "summary": {
+    "total": 1,
+    "canonical_to_legacy": 0,
+    "legacy_to_canonical": 1
+  },
+  "findings": [
+    {
+      "file": "app/main.py",
+      "line": 1,
+      "imported_module": "tmb_ai_os.main",
+      "direction": "legacy_to_canonical"
+    }
+  ]
+}
