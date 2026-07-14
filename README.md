@@ -1,121 +1,76 @@
-<<<<<<< HEAD
-# tmb-ai-os
-แพลตฟอร์ม Enterprise AI สำหรับธุรกิจโรงงาน OEM
-=======
-# TMB AI OS
+# TMB AI OS — Milestone 1
 
-Thai Modern Bags Enterprise AI Operating System is a modular platform for building
-AI-assisted marketing, sales, production, purchasing, finance, and executive workflows.
-Milestone 1 delivers the content-first foundation and a working Gemini-backed marketing service.
+Content-first foundation for Thai Modern Bags.
 
-## Current capabilities
+## What this milestone includes
 
-- Markdown is the canonical AI content output.
-- Gemini is isolated behind a provider interface.
-- Automatic model discovery, retry, and fallback handle model changes and temporary 503 errors.
-- Prompts are versioned under `app/prompts/` instead of embedded in Python.
-- FastAPI exposes JSON metadata and plain Markdown endpoints.
-- SQLite stores draft history without requiring external infrastructure.
-- GitHub Actions validates formatting, lint, compilation, and tests.
-- Docker and local macOS workflows are included.
+- Markdown + YAML front matter as the content source of truth
+- Gemini provider using the official `google-genai` SDK
+- FastAPI endpoints
+- CLI commands
+- Validation before generation
+- Deterministic prompt assembly
+- Unit tests that do not call Gemini
+- GitHub Actions CI
 
-## Architecture
-
-```text
-FastAPI API
-  -> Content Engine
-     -> Prompt Loader
-     -> Provider Factory
-        -> Gemini Provider
-     -> Markdown Renderer
-  -> Draft Repository (SQLite)
-```
-
-Future modules live behind stable boundaries:
-
-```text
-app/
-├── agents/        # Marketing, sales, factory and executive agents
-├── providers/     # Gemini and future OpenAI/Anthropic/Ollama adapters
-├── content/       # Content-first orchestration
-├── prompts/       # Versioned prompt SDK
-├── renderers/     # Markdown now; HTML/DOCX/PDF later
-├── knowledge/     # RAG and governed company knowledge
-├── workflows/     # Multi-agent and automation workflows
-└── integrations/  # WordPress, LINE OA, n8n, MCP, ERP and CRM
-```
-
-## Local setup on macOS
+## Install on macOS
 
 ```bash
-brew install python@3.13
-git clone https://github.com/tarnatphon/tmb-ai-os.git
 cd tmb-ai-os
-./scripts/bootstrap.sh
-nano .env
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -e ".[dev]"
+cp .env.example .env
 ```
 
-Required environment values:
+Add your Gemini API key to `.env`:
 
 ```env
-AI_PROVIDER=gemini
-AI_MODEL=auto
-GEMINI_API_KEY=your_google_ai_studio_api_key
+TMB_GEMINI_API_KEY=your_key_here
 ```
 
-Run the application:
+## Validate content
 
 ```bash
-source .venv/bin/activate
-make run
+tmb-ai validate
 ```
 
-Open `http://127.0.0.1:8000`.
-
-## API
-
-- `GET /api/health`
-- `POST /api/content/generate` — metadata plus Markdown
-- `POST /api/content/generate.md` — plain Markdown response
-- `GET /api/content` — draft history
-
-Example:
+## Preview the assembled prompt
 
 ```bash
-curl -X POST http://127.0.0.1:8000/api/content/generate.md \
-  -H 'Content-Type: application/json' \
-  -d '{"topic":"รับผลิตกระเป๋าขั้นต่ำ 100 ใบ","pillar":"OEM Manufacturing"}'
+tmb-ai preview content/briefs/oem-bag-100-pcs.md
 ```
 
-## Quality checks
+## Generate content
 
 ```bash
-make install-dev
-make check
+tmb-ai generate content/briefs/oem-bag-100-pcs.md
 ```
 
-## Git workflow
+Generated files are written to `output/`.
 
-Development uses `develop` as the integration branch and focused feature branches:
+## Run API
 
 ```bash
-git checkout develop
-git checkout -b feature/content-agent
-git add .
-git commit -m "feat(agent): add content planning agent"
-git push -u origin feature/content-agent
+uvicorn tmb_ai_os.api:app --reload
 ```
 
-See `CONTRIBUTING.md`, `SECURITY.md`, and `docs/development/BRANCHING.md`.
+Then open:
 
-## Roadmap
+- `GET /health`
+- `GET /v1/content`
+- `POST /v1/generate`
 
-- M1: provider layer, prompt SDK, Markdown output, CI and documentation
-- M2: platform-specific content agents and validation
-- M3: multi-agent planning, writing, SEO and QA workflows
-- M4: frontend, preview and export
-- M5: knowledge base and RAG
-- M6: enterprise operational agents and integrations
+## Development checks
 
-This repository is proprietary to Thai Modern Bags Co., Ltd.
->>>>>>> 3e92d53 (feat(core): initialize TMB AI OS foundation)
+```bash
+ruff check .
+mypy src
+pytest
+```
+
+## Architecture principle
+
+Business content lives in Markdown. Python loads, validates, assembles, and generates.
+The AI provider is an adapter and can be replaced without rewriting business content.

@@ -1,4 +1,5 @@
 import json
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import PlainTextResponse
@@ -21,13 +22,16 @@ def get_db():
         db.close()
 
 
+DbSession = Annotated[Session, Depends(get_db)]
+
+
 @router.get("/health")
 def health():
     return {"status": "ok", "architecture": "content-first"}
 
 
 @router.post("/content/generate")
-def generate(payload: GenerateRequest, db: Session = Depends(get_db)):
+def generate(payload: GenerateRequest, db: DbSession):
     try:
         return generate_content(db, payload)
     except DuplicateContentError as exc:
@@ -41,13 +45,14 @@ def generate(payload: GenerateRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/content/generate.md", response_class=PlainTextResponse)
-def generate_markdown(payload: GenerateRequest, db: Session = Depends(get_db)):
+def generate_markdown(payload: GenerateRequest, db: DbSession):
     return generate_content(db, payload).markdown
 
 
 @router.get("/content")
-def list_content(limit: int = 20, db: Session = Depends(get_db)):
-    rows = db.query(ContentRun).order_by(ContentRun.created_at.desc()).limit(min(limit, 100)).all()
+def list_content(db: DbSession, limit: int = 20):
+    safe_limit = min(max(limit, 1), 100)
+    rows = db.query(ContentRun).order_by(ContentRun.created_at.desc()).limit(safe_limit).all()
     return [
         {
             "id": row.id,
