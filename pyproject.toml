@@ -1,0 +1,29 @@
+[project]
+name = "tmb-ai-os"
+version = "2.0.0.dev1"
+description = "Content-first enterprise AI operating system for Thai Modern Bags"
+requires-python = ">=3.13,<3.14"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Thai Modern Bags Co., Ltd." }]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+exclude = ["data", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"app/main.py" = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
