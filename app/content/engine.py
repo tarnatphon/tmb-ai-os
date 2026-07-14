@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 from app.content.prompt_loader import load_prompt
 from app.core.models import ContentRun
 from app.core.schemas import GenerateRequest, MarkdownContent
-from app.providers.factory import get_provider
 from app.services.topic_service import daily_topic
+from tmb_ai_os.provider_factory import get_provider
 
 
 class DuplicateContentError(RuntimeError):

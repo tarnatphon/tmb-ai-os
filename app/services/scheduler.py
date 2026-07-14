@@ -1,9 +1,9 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from app.core.config import settings
 from app.core.database import SessionLocal
 from app.core.schemas import GenerateRequest
 from app.services.content_service import generate_content
+from tmb_ai_os.config import settings
 
 scheduler = BackgroundScheduler(timezone=settings.app_timezone)
 

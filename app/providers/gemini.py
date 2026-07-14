@@ -4,14 +4,14 @@ import time
 from google import genai
 from google.genai import types
 
-from app.core.config import settings
-from app.providers.base import AIProvider, GenerationResult
 from app.providers.errors import (
     ProviderConfigurationError,
     ProviderError,
     ProviderQuotaError,
     ProviderUnavailableError,
 )
+from tmb_ai_os.config import settings
+from tmb_ai_os.provider_contracts import AIProvider, GenerationResult
 
 _MODEL_PREFERENCES = (
     "gemini-3.5-flash",
