@@ -5,6 +5,8 @@ from pydantic import BaseModel
 
 from .api_v2 import router as milestone_2_router
 from .api_v3 import router as milestone_3_router
+from .api_v4 import router as milestone_4_router
+from .api_v5 import router as milestone_5_router
 from .config import get_settings
 from .content import ContentRepository
 from .providers import GeminiGenerator
@@ -13,6 +15,8 @@ from .service import ContentGenerationService
 app = FastAPI(title="TMB AI OS", version="0.1.0")
 app.include_router(milestone_2_router)
 app.include_router(milestone_3_router)
+app.include_router(milestone_4_router)
+app.include_router(milestone_5_router)
 
 
 class GenerateRequest(BaseModel):
