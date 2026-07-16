@@ -10,6 +10,7 @@ from .api_v5 import router as milestone_5_router
 from .api_v6 import router as milestone_6_router
 from .api_v7 import router as milestone_7_router
 from .api_v8 import router as milestone_8_router
+from .api_v9 import router as milestone_9_router
 from .config import get_settings
 from .content import ContentRepository
 from .providers import GeminiGenerator
@@ -23,6 +24,7 @@ app.include_router(milestone_5_router)
 app.include_router(milestone_6_router)
 app.include_router(milestone_7_router)
 app.include_router(milestone_8_router)
+app.include_router(milestone_9_router)
 
 
 class GenerateRequest(BaseModel):
