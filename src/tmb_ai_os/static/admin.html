@@ -6,7 +6,7 @@
 <title>TMB AI OS Admin</title>
 <style>
 body{font-family:system-ui;margin:0;background:#f5f7f6;color:#21332a}
-header{background:#244f3b;color:#fff;padding:20px 28px}
+header{background:#244f3b;color:#fff;padding:20px 28px;display:flex;justify-content:space-between}
 main{max-width:1200px;margin:24px auto;padding:0 20px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
 .card{background:#fff;border-radius:12px;padding:18px;box-shadow:0 2px 8px #0000000f}
@@ -14,11 +14,15 @@ main{max-width:1200px;margin:24px auto;padding:0 20px}
 .ok{color:#18794e}.bad{color:#b42318}
 table{width:100%;border-collapse:collapse;margin-top:10px}
 th,td{padding:10px;text-align:left;border-bottom:1px solid #e5e7eb;font-size:14px}
-button{border:0;background:#244f3b;color:white;padding:10px 16px;border-radius:8px}
+button{border:0;background:#244f3b;color:white;padding:10px 16px;border-radius:8px;cursor:pointer}
+.secondary{background:#6b7280}
 </style>
 </head>
 <body>
-<header><h1>TMB AI OS — Operations Dashboard</h1></header>
+<header>
+  <h1>TMB AI OS — Secure Operations Dashboard</h1>
+  <button class="secondary" onclick="logout()">ออกจากระบบ</button>
+</header>
 <main>
 <button onclick="loadAll()">รีเฟรชข้อมูล</button>
 <div class="grid" id="summary" style="margin-top:16px"></div>
@@ -32,15 +36,27 @@ button{border:0;background:#244f3b;color:white;padding:10px 16px;border-radius:8
 </div>
 </main>
 <script>
-async function fetchJson(url){
-  const response=await fetch(url);
+const apiKey=sessionStorage.getItem("tmb_admin_api_key");
+if(!apiKey){window.location.href="/admin/login"}
+
+async function fetchJson(url,options={}){
+  options.headers={...(options.headers||{}),"X-API-Key":apiKey};
+  const response=await fetch(url,options);
+  if(response.status===401||response.status===403){
+    sessionStorage.removeItem("tmb_admin_api_key");
+    window.location.href="/admin/login";
+    throw new Error("Unauthorized");
+  }
   if(!response.ok){throw new Error(`HTTP ${response.status}`)}
   return response.json();
 }
+
 function card(title,value,good=true){
   return `<div class="card"><div>${title}</div><div class="value ${good?"ok":"bad"}">${value}</div></div>`;
 }
+
 async function loadAll(){
+  await fetchJson("/v19/admin/session");
   const summary=await fetchJson("/v18/dashboard/summary");
   document.getElementById("summary").innerHTML=[
     card("Readiness",summary.readiness.ready?"READY":"NOT READY",summary.readiness.ready),
@@ -50,15 +66,32 @@ async function loadAll(){
     card("Backups",summary.backups.count),
     card("Notification Failed",summary.notifications.failed,summary.notifications.failed===0)
   ].join("");
+
   const incidents=await fetchJson("/v18/dashboard/incidents");
   document.getElementById("incidents").innerHTML=incidents.map(
     item=>`<tr><td>${item.id}</td><td>${item.code}</td><td>${item.severity}</td><td>${item.status}</td></tr>`
   ).join("");
+
   const deliveries=await fetchJson("/v18/dashboard/notifications");
   document.getElementById("notifications").innerHTML=deliveries.map(
     item=>`<tr><td>${item.id}</td><td>${item.provider}</td><td>${item.alert_code}</td><td>${item.status}</td></tr>`
   ).join("");
+
+  await fetchJson("/v19/admin/audit",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      action:"admin.dashboard.view",
+      detail:"Operations dashboard loaded"
+    })
+  });
 }
+
+function logout(){
+  sessionStorage.removeItem("tmb_admin_api_key");
+  window.location.href="/admin/login";
+}
+
 loadAll().catch(error=>{
   document.getElementById("summary").innerHTML=card("Dashboard Error",error.message,false);
 });

@@ -5,9 +5,15 @@ from sqlalchemy.orm import Session
 
 from .dashboard_service import DashboardService
 from .database import get_db
+from .security import Permission, Principal
+from .security_dependencies import permission_dependency
 
 router = APIRouter(prefix="/v18", tags=["Milestone 5.9"])
 DbSession = Annotated[Session, Depends(get_db)]
+AdminPrincipal = Annotated[
+    Principal,
+    Depends(permission_dependency(Permission.SECURITY_ADMIN)),
+]
 
 
 @router.get("/dashboard/summary")
@@ -17,6 +23,7 @@ def dashboard_summary(db: DbSession) -> dict[str, object]:
 
 @router.get("/dashboard/incidents")
 def dashboard_incidents(
+    _: AdminPrincipal,
     db: DbSession,
     limit: int = Query(default=20, ge=1, le=100),
 ) -> list[dict[str, object]]:
@@ -25,6 +32,7 @@ def dashboard_incidents(
 
 @router.get("/dashboard/notifications")
 def dashboard_notifications(
+    _: AdminPrincipal,
     db: DbSession,
     limit: int = Query(default=20, ge=1, le=100),
 ) -> list[dict[str, object]]:

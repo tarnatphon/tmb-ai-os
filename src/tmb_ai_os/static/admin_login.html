@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TMB AI OS Admin Login</title>
+<style>
+body{
+  font-family:system-ui;
+  margin:0;
+  background:#f5f7f6;
+  color:#21332a;
+  display:grid;
+  place-items:center;
+  min-height:100vh
+}
+.card{
+  width:min(420px,calc(100% - 40px));
+  background:#fff;
+  border-radius:14px;
+  padding:28px;
+  box-shadow:0 8px 30px #00000012
+}
+input{
+  width:100%;
+  box-sizing:border-box;
+  padding:12px;
+  border:1px solid #cfd7d2;
+  border-radius:8px;
+  margin:10px 0 16px
+}
+button{
+  width:100%;
+  border:0;
+  background:#244f3b;
+  color:#fff;
+  padding:12px;
+  border-radius:8px;
+  cursor:pointer
+}
+.error{color:#b42318;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>TMB AI OS Admin</h1>
+  <p>กรอก API key สำหรับผู้ดูแลระบบ</p>
+  <input id="apiKey" type="password" autocomplete="off">
+  <button onclick="login()">เข้าสู่ระบบ</button>
+  <div class="error" id="error"></div>
+</div>
+<script>
+async function login(){
+  const key=document.getElementById("apiKey").value.trim();
+  const error=document.getElementById("error");
+  error.textContent="";
+  if(!key){
+    error.textContent="กรุณากรอก API key";
+    return;
+  }
+  const response=await fetch("/v19/admin/session",{
+    headers:{"X-API-Key":key}
+  });
+  if(!response.ok){
+    error.textContent="API key ไม่ถูกต้องหรือไม่มีสิทธิ์ผู้ดูแลระบบ";
+    return;
+  }
+  sessionStorage.setItem("tmb_admin_api_key",key);
+  window.location.href="/admin";
+}
+</script>
+</body>
+</html>
