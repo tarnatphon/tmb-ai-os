@@ -18,6 +18,7 @@ from .api_v13 import router as milestone_13_router
 from .api_v14 import router as milestone_14_router
 from .api_v15 import router as milestone_15_router
 from .api_v16 import router as milestone_16_router
+from .api_v17 import router as milestone_17_router
 from .config import get_settings
 from .content import ContentRepository
 from .providers import GeminiGenerator
@@ -39,6 +40,7 @@ app.include_router(milestone_13_router)
 app.include_router(milestone_14_router)
 app.include_router(milestone_15_router)
 app.include_router(milestone_16_router)
+app.include_router(milestone_17_router)
 
 
 class GenerateRequest(BaseModel):

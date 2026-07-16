@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     retention_content_days: int = 365
     retention_audit_days: int = 180
     retention_backup_days: int = 90
+    notification_provider: str = "dry_run"
+    webhook_url: str = ""
+    webhook_secret: str = ""
     require_secure_api_key: bool = True
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
