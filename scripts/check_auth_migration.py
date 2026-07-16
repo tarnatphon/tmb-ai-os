@@ -1,17 +1,20 @@
+import ast
 from pathlib import Path
-import re
 
 FILES = (
     Path("src/tmb_ai_os/api_v18.py"),
     Path("src/tmb_ai_os/api_v19.py"),
 )
 
-LEGACY_PATTERN = re.compile(r"(?<!unified_)(?<!scoped_)permission_dependency\(")
 
-SUPPORTED_DEPENDENCIES = (
-    "unified_permission_dependency(",
-    "scoped_permission_dependency(",
-)
+def call_name(node: ast.Call) -> str | None:
+    if isinstance(node.func, ast.Name):
+        return node.func.id
+
+    if isinstance(node.func, ast.Attribute):
+        return node.func.attr
+
+    return None
 
 
 def main() -> None:
@@ -20,15 +23,18 @@ def main() -> None:
     for path in FILES:
         text = path.read_text(encoding="utf-8")
 
-        if LEGACY_PATTERN.search(text):
-            failures.append(
-                f"Legacy permission dependency remains in {path}"
-            )
+        try:
+            tree = ast.parse(text, filename=str(path))
+        except SyntaxError as exc:
+            failures.append(f"Unable to parse {path}: {exc}")
+            continue
 
-        if not any(name in text for name in SUPPORTED_DEPENDENCIES):
-            failures.append(
-                f"Supported auth dependency missing in {path}"
-            )
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and call_name(node) == "permission_dependency":
+                failures.append(
+                    f"Legacy permission dependency remains in "
+                    f"{path}:{node.lineno}"
+                )
 
     if failures:
         raise SystemExit("\n".join(failures))
