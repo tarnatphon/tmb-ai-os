@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     rate_limit_requests: int = 60
     rate_limit_window_seconds: int = 60
     backup_dir: str = "backups"
+    retention_content_days: int = 365
+    retention_audit_days: int = 180
+    retention_backup_days: int = 90
     require_secure_api_key: bool = True
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
