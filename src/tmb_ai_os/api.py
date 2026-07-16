@@ -23,6 +23,7 @@ from .api_v17 import router as milestone_17_router
 from .api_v18 import router as milestone_18_router
 from .api_v19 import router as milestone_19_router
 from .api_v20 import router as milestone_20_router
+from .api_v21 import router as milestone_21_router
 from .config import get_settings
 from .content import ContentRepository
 from .providers import GeminiGenerator
@@ -48,6 +49,7 @@ app.include_router(milestone_17_router)
 app.include_router(milestone_18_router)
 app.include_router(milestone_19_router)
 app.include_router(milestone_20_router)
+app.include_router(milestone_21_router)
 app.include_router(admin_dashboard_router)
 
 

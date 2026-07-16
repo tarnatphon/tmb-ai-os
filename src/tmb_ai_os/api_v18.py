@@ -6,13 +6,13 @@ from sqlalchemy.orm import Session
 from .dashboard_service import DashboardService
 from .database import get_db
 from .security import Permission, Principal
-from .security_dependencies import permission_dependency
+from .unified_auth import unified_permission_dependency
 
 router = APIRouter(prefix="/v18", tags=["Milestone 5.9"])
 DbSession = Annotated[Session, Depends(get_db)]
 AdminPrincipal = Annotated[
     Principal,
-    Depends(permission_dependency(Permission.SECURITY_ADMIN)),
+    Depends(unified_permission_dependency(Permission.SECURITY_ADMIN)),
 ]
 
 

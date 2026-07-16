@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     notification_provider: str = "dry_run"
     webhook_url: str = ""
     webhook_secret: str = ""
+    legacy_api_key_fallback_enabled: bool = True
     require_secure_api_key: bool = True
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
