@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     scheduler_enabled: bool = False
     scheduler_hour: int = 8
     scheduler_minute: int = 0
+    api_key: str = "change-me"
+    api_role: str = "admin"
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
     content_dir: Path = Path("content")
