@@ -10,10 +10,8 @@ FILES = (
 def call_name(node: ast.Call) -> str | None:
     if isinstance(node.func, ast.Name):
         return node.func.id
-
     if isinstance(node.func, ast.Attribute):
         return node.func.attr
-
     return None
 
 
@@ -21,16 +19,20 @@ def main() -> None:
     failures: list[str] = []
 
     for path in FILES:
-        text = path.read_text(encoding="utf-8")
-
         try:
-            tree = ast.parse(text, filename=str(path))
+            tree = ast.parse(
+                path.read_text(encoding="utf-8"),
+                filename=str(path),
+            )
         except SyntaxError as exc:
             failures.append(f"Unable to parse {path}: {exc}")
             continue
 
         for node in ast.walk(tree):
-            if isinstance(node, ast.Call) and call_name(node) == "permission_dependency":
+            if (
+                isinstance(node, ast.Call)
+                and call_name(node) == "permission_dependency"
+            ):
                 failures.append(
                     f"Legacy permission dependency remains in "
                     f"{path}:{node.lineno}"
