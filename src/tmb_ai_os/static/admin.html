@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TMB AI OS Admin</title>
+<style>
+body{font-family:system-ui;margin:0;background:#f5f7f6;color:#21332a}
+header{background:#244f3b;color:#fff;padding:20px 28px}
+main{max-width:1200px;margin:24px auto;padding:0 20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{background:#fff;border-radius:12px;padding:18px;box-shadow:0 2px 8px #0000000f}
+.value{font-size:28px;font-weight:700;margin-top:8px}
+.ok{color:#18794e}.bad{color:#b42318}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{padding:10px;text-align:left;border-bottom:1px solid #e5e7eb;font-size:14px}
+button{border:0;background:#244f3b;color:white;padding:10px 16px;border-radius:8px}
+</style>
+</head>
+<body>
+<header><h1>TMB AI OS — Operations Dashboard</h1></header>
+<main>
+<button onclick="loadAll()">รีเฟรชข้อมูล</button>
+<div class="grid" id="summary" style="margin-top:16px"></div>
+<div class="card" style="margin-top:20px">
+<h2>Incidents ล่าสุด</h2>
+<table><tbody id="incidents"></tbody></table>
+</div>
+<div class="card" style="margin-top:20px">
+<h2>Notification Deliveries ล่าสุด</h2>
+<table><tbody id="notifications"></tbody></table>
+</div>
+</main>
+<script>
+async function fetchJson(url){
+  const response=await fetch(url);
+  if(!response.ok){throw new Error(`HTTP ${response.status}`)}
+  return response.json();
+}
+function card(title,value,good=true){
+  return `<div class="card"><div>${title}</div><div class="value ${good?"ok":"bad"}">${value}</div></div>`;
+}
+async function loadAll(){
+  const summary=await fetchJson("/v18/dashboard/summary");
+  document.getElementById("summary").innerHTML=[
+    card("Readiness",summary.readiness.ready?"READY":"NOT READY",summary.readiness.ready),
+    card("Content ทั้งหมด",summary.metrics.content.total),
+    card("Publish Failed",summary.metrics.publish_queue.failed,summary.metrics.publish_queue.failed===0),
+    card("Open Incidents",summary.incidents.open,summary.incidents.open===0),
+    card("Backups",summary.backups.count),
+    card("Notification Failed",summary.notifications.failed,summary.notifications.failed===0)
+  ].join("");
+  const incidents=await fetchJson("/v18/dashboard/incidents");
+  document.getElementById("incidents").innerHTML=incidents.map(
+    item=>`<tr><td>${item.id}</td><td>${item.code}</td><td>${item.severity}</td><td>${item.status}</td></tr>`
+  ).join("");
+  const deliveries=await fetchJson("/v18/dashboard/notifications");
+  document.getElementById("notifications").innerHTML=deliveries.map(
+    item=>`<tr><td>${item.id}</td><td>${item.provider}</td><td>${item.alert_code}</td><td>${item.status}</td></tr>`
+  ).join("");
+}
+loadAll().catch(error=>{
+  document.getElementById("summary").innerHTML=card("Dashboard Error",error.message,false);
+});
+</script>
+</body>
+</html>

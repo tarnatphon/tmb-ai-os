@@ -3,6 +3,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from .admin_dashboard import router as admin_dashboard_router
 from .api_v2 import router as milestone_2_router
 from .api_v3 import router as milestone_3_router
 from .api_v4 import router as milestone_4_router
@@ -19,6 +20,7 @@ from .api_v14 import router as milestone_14_router
 from .api_v15 import router as milestone_15_router
 from .api_v16 import router as milestone_16_router
 from .api_v17 import router as milestone_17_router
+from .api_v18 import router as milestone_18_router
 from .config import get_settings
 from .content import ContentRepository
 from .providers import GeminiGenerator
@@ -41,6 +43,8 @@ app.include_router(milestone_14_router)
 app.include_router(milestone_15_router)
 app.include_router(milestone_16_router)
 app.include_router(milestone_17_router)
+app.include_router(milestone_18_router)
+app.include_router(admin_dashboard_router)
 
 
 class GenerateRequest(BaseModel):
