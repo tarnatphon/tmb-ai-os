@@ -6,6 +6,7 @@ from fastapi.responses import HTMLResponse
 
 from .api import app as api_app
 from .lifecycle import application_lifespan
+from .middleware import RateLimitMiddleware, RequestContextMiddleware
 
 
 @asynccontextmanager
@@ -17,6 +18,8 @@ app = api_app
 app.title = "TMB AI OS"
 app.version = "0.4.0"
 app.router.lifespan_context = application_lifespan
+app.add_middleware(RequestContextMiddleware)
+app.add_middleware(RateLimitMiddleware)
 
 
 DASHBOARD_HTML = """

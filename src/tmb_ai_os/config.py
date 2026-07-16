@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     scheduler_minute: int = 0
     api_key: str = "change-me"
     api_role: str = "admin"
+    rate_limit_requests: int = 60
+    rate_limit_window_seconds: int = 60
+    require_secure_api_key: bool = True
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
     content_dir: Path = Path("content")
