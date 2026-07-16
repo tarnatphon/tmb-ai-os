@@ -68,9 +68,5 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def initialize_database() -> None:
-    from . import (
-        audit_models,  # noqa: F401
-        models,  # noqa: F401
-    )
 
     Base.metadata.create_all(bind=engine)
