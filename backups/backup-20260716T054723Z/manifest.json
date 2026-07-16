@@ -1,0 +1,14 @@
+{
+  "archive_file": {
+    "path": "content-knowledge.tar.gz",
+    "sha256": "78404ae121bc5d150113d89e15ffb8143c493775921d53bc8d7e1b5dc6b1994e",
+    "size_bytes": 2214
+  },
+  "created_at": "2026-07-16T05:47:23.612157+00:00",
+  "database_file": {
+    "path": "database.sqlite3",
+    "sha256": "1a48a068ab57459e74f274bc5d370380adad272b24767deb9873478e02134003",
+    "size_bytes": 36864
+  },
+  "name": "backup-20260716T054723Z"
+}

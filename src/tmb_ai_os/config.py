@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     api_role: str = "admin"
     rate_limit_requests: int = 60
     rate_limit_window_seconds: int = 60
+    backup_dir: str = "backups"
     require_secure_api_key: bool = True
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
