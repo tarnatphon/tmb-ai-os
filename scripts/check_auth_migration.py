@@ -11,7 +11,7 @@ def main() -> None:
 
     for path in FILES:
         text = path.read_text(encoding="utf-8")
-        if "permission_dependency(" in text:
+        if "permission_dependency(" in text.replace("unified_permission_dependency(", ""):
             failures.append(f"Legacy permission dependency remains in {path}")
         if "unified_permission_dependency(" not in text:
             failures.append(f"Unified auth dependency missing in {path}")
