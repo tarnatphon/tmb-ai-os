@@ -1,0 +1,30 @@
+FROM python:3.13-slim AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+RUN useradd --create-home --uid 10001 tmb
+
+COPY pyproject.toml README.md ./
+COPY src ./src
+COPY content ./content
+COPY knowledge ./knowledge
+COPY scripts ./scripts
+
+RUN python -m pip install --upgrade pip \
+    && pip install .
+
+RUN mkdir -p /app/data /app/output \
+    && chown -R tmb:tmb /app
+
+USER tmb
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/v9/health/live')" || exit 1
+
+CMD ["python", "scripts/start_production.py"]

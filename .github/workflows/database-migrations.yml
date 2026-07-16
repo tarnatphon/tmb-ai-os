@@ -1,0 +1,21 @@
+name: Database Migration Check
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: python -m pip install --upgrade pip
+      - run: pip install -e ".[dev]"
+      - run: alembic upgrade head
+      - run: python scripts/check_migration_status.py
+      - run: pytest tests/test_migrations.py tests/test_api_v13_contract.py

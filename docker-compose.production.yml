@@ -1,0 +1,29 @@
+services:
+  tmb-ai-os:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    ports:
+      - "8000:8000"
+    volumes:
+      - tmb_data:/app/data
+      - tmb_output:/app/output
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/v9/health/live')",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  tmb_data:
+  tmb_output:
