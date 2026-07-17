@@ -5,15 +5,14 @@ from sqlalchemy.orm import Session
 
 from .dashboard_service import DashboardService
 from .database import get_db
-from .scoped_auth import scope_dependency
-from .scopes import ApiScope
-from .security import Principal
+from .security import Permission, Principal
+from .unified_auth import unified_permission_dependency
 
 router = APIRouter(prefix="/v18", tags=["Milestone 5.9"])
 DbSession = Annotated[Session, Depends(get_db)]
 AdminPrincipal = Annotated[
     Principal,
-    Depends(scope_dependency(ApiScope.DASHBOARD_READ)),
+    Depends(unified_permission_dependency(Permission.OPERATIONS_READ)),
 ]
 
 
