@@ -31,6 +31,7 @@ from .api_v25 import router as milestone_25_router
 from .api_v26 import router as milestone_26_router
 from .config import get_settings
 from .content import ContentRepository
+from .health import public_health_report
 from .providers import GeminiGenerator
 from .service import ContentGenerationService
 
@@ -69,7 +70,10 @@ class GenerateRequest(BaseModel):
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok"}
+    return public_health_report(
+        service="tmb-ai-os",
+        version=app.version,
+    )
 
 
 @app.get("/v1/content")

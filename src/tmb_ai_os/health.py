@@ -66,3 +66,16 @@ def build_readiness_report(
         ready=all(check.healthy for check in checks),
         checks=checks,
     )
+
+
+def public_health_report(
+    *,
+    service: str,
+    version: str,
+) -> dict[str, str]:
+    """Return public, non-sensitive application health metadata."""
+    return {
+        "status": "ok",
+        "service": service,
+        "version": version,
+    }
