@@ -5,6 +5,7 @@ from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from .api_key_scope_service import ApiKeyScopeService
+from .api_key_service import ApiKeyNotFoundError
 from .database import get_db
 from .scopes import ApiScope
 from .security import Principal
@@ -23,10 +24,16 @@ def scope_dependency(
         ],
         db: DbSession,
     ) -> Principal:
-        scopes = ApiKeyScopeService().get_scopes(
-            db,
-            principal.api_key_id,
-        )
+        try:
+            scopes = ApiKeyScopeService().get_scopes(
+                db,
+                principal.api_key_id,
+            )
+        except ApiKeyNotFoundError as exc:
+            raise HTTPException(
+                status_code=401,
+                detail="API key is not registered for scoped access",
+            ) from exc
         if required_scope not in scopes:
             raise HTTPException(
                 status_code=403,
