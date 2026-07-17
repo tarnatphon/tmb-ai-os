@@ -68,8 +68,11 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def initialize_database() -> None:
-
     Base.metadata.create_all(bind=engine)
 
-# Register API key lifecycle SQLAlchemy models after Base is initialized.
-from . import api_key_lifecycle_models  # noqa: E402, F401
+
+# Register SQLAlchemy models after Base is initialized.
+from . import (  # noqa: E402, F401
+    api_key_lifecycle_models,
+    api_key_telemetry_models,
+)
