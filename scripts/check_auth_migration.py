@@ -29,14 +29,8 @@ def main() -> None:
             continue
 
         for node in ast.walk(tree):
-            if (
-                isinstance(node, ast.Call)
-                and call_name(node) == "permission_dependency"
-            ):
-                failures.append(
-                    f"Legacy permission dependency remains in "
-                    f"{path}:{node.lineno}"
-                )
+            if isinstance(node, ast.Call) and call_name(node) == "permission_dependency":
+                failures.append(f"Legacy permission dependency remains in {path}:{node.lineno}")
 
     if failures:
         raise SystemExit("\n".join(failures))

@@ -1,0 +1,20 @@
+name: Authorization Compliance
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+jobs:
+  authorization:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: python -m pip install --upgrade pip
+      - run: pip install -e ".[dev]"
+      - run: python scripts/check_policy_compliance.py
+      - run: pytest tests/test_authorization_audit.py tests/test_policy_compliance.py
