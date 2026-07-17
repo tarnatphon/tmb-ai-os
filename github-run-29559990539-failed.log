@@ -1,0 +1,14 @@
+lifecycle	Run python scripts/check_api_key_lifecycle.py	﻿2026-07-17T06:25:56.4989397Z ##[group]Run python scripts/check_api_key_lifecycle.py
+lifecycle	Run python scripts/check_api_key_lifecycle.py	2026-07-17T06:25:56.4989879Z ^[[36;1mpython scripts/check_api_key_lifecycle.py^[[0m
+lifecycle	Run python scripts/check_api_key_lifecycle.py	2026-07-17T06:25:56.5048976Z shell: /usr/bin/bash -e {0}
+lifecycle	Run python scripts/check_api_key_lifecycle.py	2026-07-17T06:25:56.5049252Z env:
+lifecycle	Run python scripts/check_api_key_lifecycle.py	2026-07-17T06:25:56.5049543Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.14/x64
+lifecycle	Run python scripts/check_api_key_lifecycle.py	2026-07-17T06:25:56.5050038Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.14/x64/lib/pkgconfig
+lifecycle	Run python scripts/check_api_key_lifecycle.py	2026-07-17T06:25:56.5050522Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.14/x64
+lifecycle	Run python scripts/check_api_key_lifecycle.py	2026-07-17T06:25:56.5050950Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.14/x64
+lifecycle	Run python scripts/check_api_key_lifecycle.py	2026-07-17T06:25:56.5051414Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.14/x64
+lifecycle	Run python scripts/check_api_key_lifecycle.py	2026-07-17T06:25:56.5051874Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.14/x64/lib
+lifecycle	Run python scripts/check_api_key_lifecycle.py	2026-07-17T06:25:56.5052268Z ##[endgroup]
+lifecycle	Run python scripts/check_api_key_lifecycle.py	2026-07-17T06:25:56.5394284Z API key lifecycle validation failed:
+lifecycle	Run python scripts/check_api_key_lifecycle.py	2026-07-17T06:25:56.5394825Z api_key_lifecycle_models registration
+lifecycle	Run python scripts/check_api_key_lifecycle.py	2026-07-17T06:25:56.5451144Z ##[error]Process completed with exit code 1.
