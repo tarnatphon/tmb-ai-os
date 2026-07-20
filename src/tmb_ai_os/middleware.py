@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from .config import get_settings
+from .http_metrics import record_http_request
 from .rate_limit import InMemoryRateLimiter
 from .request_context import (
     create_request_id,
@@ -38,10 +39,46 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         set_request_id(request_id)
 
         started = time.perf_counter()
-        response = await call_next(request)
+
+        try:
+            response = await call_next(request)
+        except Exception:
+            duration_ms = round(
+                (time.perf_counter() - started) * 1000,
+                2,
+            )
+            record_http_request(
+                method=request.method,
+                status_code=500,
+                duration_ms=duration_ms,
+            )
+
+            logger.exception(
+                json.dumps(
+                    {
+                        "request_id": request_id,
+                        "method": request.method,
+                        "path": request.url.path,
+                        "status_code": 500,
+                        "duration_ms": duration_ms,
+                        "client": (
+                            request.client.host if request.client is not None else "unknown"
+                        ),
+                    },
+                    ensure_ascii=False,
+                    sort_keys=True,
+                )
+            )
+            raise
+
         duration_ms = round(
             (time.perf_counter() - started) * 1000,
             2,
+        )
+        record_http_request(
+            method=request.method,
+            status_code=response.status_code,
+            duration_ms=duration_ms,
         )
 
         response.headers["X-Request-ID"] = request_id
