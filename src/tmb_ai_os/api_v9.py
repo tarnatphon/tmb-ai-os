@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from .database import get_db
 from .health import build_readiness_report
+from .http_metrics import get_http_metrics
 from .operations_metrics import (
     get_content_metrics,
     get_operations_metrics,
@@ -50,3 +51,8 @@ def publish_queue_metrics(db: DbSession) -> dict[str, int]:
 @router.get("/metrics/content")
 def content_metrics(db: DbSession) -> dict[str, int]:
     return asdict(get_content_metrics(db))
+
+
+@router.get("/metrics/http")
+def http_request_metrics() -> dict[str, object]:
+    return asdict(get_http_metrics())
