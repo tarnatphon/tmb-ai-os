@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from .config import Settings
 from .security_hardening import validate_security_config
 
-
 SUPPORTED_AI_PROVIDERS = frozenset({"gemini"})
 SUPPORTED_DATABASE_SCHEMES = (
     "sqlite:///",
