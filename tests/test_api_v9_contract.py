@@ -9,3 +9,5 @@ def test_v9_router_exposes_observability_routes() -> None:
     assert "/v9/metrics/operations" in paths
     assert "/v9/metrics/publish-queue" in paths
     assert "/v9/metrics/content" in paths
+    assert "/v9/metrics/http" in paths
+    assert "/v9/metrics/prometheus" in paths
