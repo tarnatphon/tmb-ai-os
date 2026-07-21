@@ -13,6 +13,7 @@ from tmb_ai_os.alert_delivery import (
     DeliveryResult,
     DeliveryStatus,
 )
+from tmb_ai_os.alert_observability import AlertObservability
 from tmb_ai_os.alert_policy import (
     AlertPolicy,
     DeploymentEnvironment,
@@ -41,12 +42,14 @@ class AlertRouter:
         delivery_service: AlertDeliveryService,
         channels: Iterable[AlertChannel],
         environment: DeploymentEnvironment | str | None = None,
+        observability: AlertObservability | None = None,
     ) -> None:
         channel_list = tuple(channels)
 
         self._policy = policy
         self._delivery_service = delivery_service
         self._environment = environment
+        self._observability = observability
         self._channels = {channel.name: channel for channel in channel_list}
         self._history: list[RoutingResult] = []
 
@@ -92,4 +95,8 @@ class AlertRouter:
             routed_at=datetime.now(UTC),
         )
         self._history.append(routing_result)
+
+        if self._observability is not None:
+            self._observability.record(routing_result)
+
         return routing_result

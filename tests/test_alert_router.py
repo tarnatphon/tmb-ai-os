@@ -199,3 +199,72 @@ def test_router_uses_environment_specific_route() -> None:
     assert result.channels == ("production",)
     assert production.calls == 1
     assert general.calls == 0
+
+
+def test_router_records_observability_metrics() -> None:
+    from tmb_ai_os.alert_observability import AlertObservability
+
+    observability = AlertObservability()
+    channel = ConfigurableChannel(
+        "primary",
+        DeliveryStatus.SUCCESS,
+    )
+    router = AlertRouter(
+        policy=make_policy("primary"),
+        delivery_service=AlertDeliveryService(cooldown_seconds=0),
+        channels=(channel,),
+        observability=observability,
+    )
+
+    router.route(make_alert())
+
+    snapshot = observability.snapshot()
+
+    assert snapshot.routed_total == 1
+    assert snapshot.delivery_success_total == 1
+    assert snapshot.delivery_failed_total == 0
+
+
+def test_router_records_fallback_metrics() -> None:
+    from tmb_ai_os.alert_observability import AlertObservability
+
+    observability = AlertObservability()
+    primary = ConfigurableChannel(
+        "primary",
+        DeliveryStatus.FAILED,
+    )
+    fallback = ConfigurableChannel(
+        "fallback",
+        DeliveryStatus.SUCCESS,
+    )
+    router = AlertRouter(
+        policy=make_policy("primary", "fallback"),
+        delivery_service=AlertDeliveryService(cooldown_seconds=0),
+        channels=(primary, fallback),
+        observability=observability,
+    )
+
+    router.route(make_alert())
+
+    snapshot = observability.snapshot()
+
+    assert snapshot.routed_total == 1
+    assert snapshot.delivery_failed_total == 1
+    assert snapshot.delivery_success_total == 1
+    assert snapshot.fallback_total == 1
+
+
+def test_router_works_without_observability() -> None:
+    channel = ConfigurableChannel(
+        "primary",
+        DeliveryStatus.SUCCESS,
+    )
+    router = AlertRouter(
+        policy=make_policy("primary"),
+        delivery_service=AlertDeliveryService(cooldown_seconds=0),
+        channels=(channel,),
+    )
+
+    result = router.route(make_alert())
+
+    assert result.successful is True
