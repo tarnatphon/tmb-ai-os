@@ -2,7 +2,7 @@ from dataclasses import asdict
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from sqlalchemy.orm import Session
 
 from .database import get_db
@@ -13,6 +13,7 @@ from .operations_metrics import (
     get_operations_metrics,
     get_publish_queue_metrics,
 )
+from .prometheus_metrics import render_prometheus_metrics
 
 router = APIRouter(prefix="/v9", tags=["Milestone 5.0"])
 DbSession = Annotated[Session, Depends(get_db)]
@@ -56,3 +57,11 @@ def content_metrics(db: DbSession) -> dict[str, int]:
 @router.get("/metrics/http")
 def http_request_metrics() -> dict[str, object]:
     return asdict(get_http_metrics())
+
+
+@router.get("/metrics/prometheus")
+def prometheus_metrics() -> Response:
+    return Response(
+        content=render_prometheus_metrics(get_http_metrics()),
+        media_type="text/plain; version=0.0.4",
+    )
