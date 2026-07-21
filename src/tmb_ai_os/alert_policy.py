@@ -76,13 +76,13 @@ class AlertPolicy:
         parsed_environment = self._parse_environment(environment)
 
         if parsed_environment is not None:
-            environment_route = self._environment_routes.get(
-                parsed_environment,
-                {},
-            ).get(severity)
+            severity_routes = self._environment_routes.get(parsed_environment)
 
-            if environment_route is not None:
-                return self._normalize_route(environment_route)
+            if severity_routes is not None:
+                environment_route = severity_routes.get(severity)
+
+                if environment_route is not None:
+                    return self._normalize_route(environment_route)
 
         route = self._routes.get(severity, self._default_route)
         return self._normalize_route(route)
