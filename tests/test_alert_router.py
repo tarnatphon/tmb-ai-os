@@ -165,3 +165,37 @@ def test_router_records_history() -> None:
     router.route(make_alert())
 
     assert len(router.history) == 1
+
+
+def test_router_uses_environment_specific_route() -> None:
+    from tmb_ai_os.alert_policy import DeploymentEnvironment
+
+    general = ConfigurableChannel(
+        "general",
+        DeliveryStatus.SUCCESS,
+    )
+    production = ConfigurableChannel(
+        "production",
+        DeliveryStatus.SUCCESS,
+    )
+    policy = AlertPolicy(
+        {AlertSeverity.CRITICAL: AlertRoute(channel_names=("general",))},
+        environment_routes={
+            DeploymentEnvironment.PRODUCTION: {
+                AlertSeverity.CRITICAL: AlertRoute(channel_names=("production",))
+            }
+        },
+    )
+    router = AlertRouter(
+        policy=policy,
+        delivery_service=AlertDeliveryService(cooldown_seconds=0),
+        channels=(general, production),
+        environment=DeploymentEnvironment.PRODUCTION,
+    )
+
+    result = router.route(make_alert())
+
+    assert result.successful is True
+    assert result.channels == ("production",)
+    assert production.calls == 1
+    assert general.calls == 0

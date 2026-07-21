@@ -13,7 +13,10 @@ from tmb_ai_os.alert_delivery import (
     DeliveryResult,
     DeliveryStatus,
 )
-from tmb_ai_os.alert_policy import AlertPolicy
+from tmb_ai_os.alert_policy import (
+    AlertPolicy,
+    DeploymentEnvironment,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,11 +40,13 @@ class AlertRouter:
         policy: AlertPolicy,
         delivery_service: AlertDeliveryService,
         channels: Iterable[AlertChannel],
+        environment: DeploymentEnvironment | str | None = None,
     ) -> None:
         channel_list = tuple(channels)
 
         self._policy = policy
         self._delivery_service = delivery_service
+        self._environment = environment
         self._channels = {channel.name: channel for channel in channel_list}
         self._history: list[RoutingResult] = []
 
@@ -53,7 +58,10 @@ class AlertRouter:
         return tuple(self._history)
 
     def route(self, alert: AlertMessage) -> RoutingResult:
-        route = self._policy.resolve(alert)
+        route = self._policy.resolve(
+            alert,
+            environment=self._environment,
+        )
         deliveries: list[DeliveryResult] = []
 
         for channel_name in route.channel_names:
