@@ -39,11 +39,9 @@ class DeliveryResult:
 
 class AlertChannel(Protocol):
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
 
-    def deliver(self, alert: AlertMessage) -> DeliveryResult:
-        ...
+    def deliver(self, alert: AlertMessage) -> DeliveryResult: ...
 
 
 class WebhookAlertChannel:
