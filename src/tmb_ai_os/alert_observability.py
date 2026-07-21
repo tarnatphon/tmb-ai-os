@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from threading import Lock
+from typing import TYPE_CHECKING
 
 from tmb_ai_os.alert_delivery import DeliveryStatus
-from tmb_ai_os.alert_router import RoutingResult
+
+if TYPE_CHECKING:
+    from tmb_ai_os.alert_router import RoutingResult
 
 
 @dataclass(frozen=True, slots=True)
