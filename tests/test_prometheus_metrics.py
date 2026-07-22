@@ -1,3 +1,13 @@
+from datetime import UTC, datetime
+
+from fastapi.testclient import TestClient
+
+from tmb_ai_os.alert_observability import (
+    alert_observability,
+    reset_alert_metrics,
+)
+from tmb_ai_os.alert_router import RoutingResult
+from tmb_ai_os.api import app
 from tmb_ai_os.http_metrics import HttpMetricsCollector
 from tmb_ai_os.prometheus_metrics import render_prometheus_metrics
 
@@ -109,3 +119,25 @@ def test_prometheus_api_includes_alert_metrics() -> None:
     assert "tmb_alert_no_route_total 0" in body
 
     alert_observability.reset()
+
+
+def test_prometheus_endpoint_exports_shared_alert_metrics() -> None:
+    reset_alert_metrics()
+
+    try:
+        result = RoutingResult(
+            alert_id="integration-alert",
+            channels=("webhook",),
+            deliveries=(),
+            routed_at=datetime.now(UTC),
+        )
+        alert_observability.record(result)
+
+        with TestClient(app) as client:
+            response = client.get("/v9/metrics/prometheus")
+
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/plain; version=0.0.4")
+        assert "tmb_alerts_routed_total 1" in response.text
+    finally:
+        reset_alert_metrics()
