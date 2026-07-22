@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse, Response
 from sqlalchemy.orm import Session
 
+from .alert_observability import get_alert_metrics
 from .database import get_db
 from .health import build_readiness_report
 from .http_metrics import get_http_metrics
@@ -62,6 +63,9 @@ def http_request_metrics() -> dict[str, object]:
 @router.get("/metrics/prometheus")
 def prometheus_metrics() -> Response:
     return Response(
-        content=render_prometheus_metrics(get_http_metrics()),
+        content=render_prometheus_metrics(
+            get_http_metrics(),
+            get_alert_metrics(),
+        ),
         media_type="text/plain; version=0.0.4",
     )

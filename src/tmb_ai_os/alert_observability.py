@@ -71,3 +71,21 @@ class AlertObservability:
             self._delivery_suppressed_total = 0
             self._fallback_total = 0
             self._no_route_total = 0
+
+
+alert_observability = AlertObservability()
+
+
+def record_alert_routing(result: RoutingResult) -> None:
+    """Record one completed alert-routing result."""
+    alert_observability.record(result)
+
+
+def get_alert_metrics() -> AlertMetricsSnapshot:
+    """Return the current alert-routing metrics snapshot."""
+    return alert_observability.snapshot()
+
+
+def reset_alert_metrics() -> None:
+    """Reset the shared alert-routing metrics collector."""
+    alert_observability.reset()

@@ -51,3 +51,61 @@ def test_prometheus_label_values_are_escaped() -> None:
     output = render_prometheus_metrics(collector.snapshot())
 
     assert 'method="CUSTOM\\"METHOD"' in output
+
+
+def test_render_prometheus_alert_metrics() -> None:
+    from tmb_ai_os.alert_observability import AlertMetricsSnapshot
+
+    collector = HttpMetricsCollector()
+    alert_snapshot = AlertMetricsSnapshot(
+        routed_total=8,
+        delivery_success_total=5,
+        delivery_failed_total=2,
+        delivery_suppressed_total=1,
+        fallback_total=2,
+        no_route_total=1,
+    )
+
+    output = render_prometheus_metrics(
+        collector.snapshot(),
+        alert_snapshot,
+    )
+
+    assert "# TYPE tmb_alerts_routed_total counter" in output
+    assert "tmb_alerts_routed_total 8" in output
+    assert "tmb_alert_delivery_success_total 5" in output
+    assert "tmb_alert_delivery_failed_total 2" in output
+    assert "tmb_alert_delivery_suppressed_total 1" in output
+    assert "tmb_alert_fallback_total 2" in output
+    assert "tmb_alert_no_route_total 1" in output
+
+
+def test_alert_metrics_are_optional() -> None:
+    collector = HttpMetricsCollector()
+
+    output = render_prometheus_metrics(collector.snapshot())
+
+    assert "tmb_alerts_routed_total" not in output
+
+
+def test_prometheus_api_includes_alert_metrics() -> None:
+    from tmb_ai_os.alert_observability import (
+        alert_observability,
+        reset_alert_metrics,
+    )
+    from tmb_ai_os.api_v9 import prometheus_metrics
+
+    reset_alert_metrics()
+
+    response = prometheus_metrics()
+    body = response.body.decode()
+
+    assert response.status_code == 200
+    assert "tmb_alerts_routed_total 0" in body
+    assert "tmb_alert_delivery_success_total 0" in body
+    assert "tmb_alert_delivery_failed_total 0" in body
+    assert "tmb_alert_delivery_suppressed_total 0" in body
+    assert "tmb_alert_fallback_total 0" in body
+    assert "tmb_alert_no_route_total 0" in body
+
+    alert_observability.reset()
