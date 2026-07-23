@@ -93,9 +93,7 @@ def validate_deployment(settings: Settings) -> DeploymentReport:
             name="security",
             passed=security.secure,
             detail=(
-                "Security configuration is valid"
-                if security.secure
-                else "; ".join(security.issues)
+                "Security configuration is valid" if security.secure else "; ".join(security.issues)
             ),
         ),
         _validate_database_url(settings.database_url),
