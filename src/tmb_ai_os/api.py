@@ -30,6 +30,7 @@ from .api_v24 import router as milestone_24_router
 from .api_v25 import router as milestone_25_router
 from .api_v26 import router as milestone_26_router
 from .api_v27 import router as milestone_27_router
+from .api_v28 import router as milestone_28_router
 from .config import get_settings
 from .content import ContentRepository
 from .health import public_health_report
@@ -63,6 +64,7 @@ app.include_router(milestone_24_router)
 app.include_router(milestone_25_router)
 app.include_router(milestone_26_router)
 app.include_router(milestone_27_router)
+app.include_router(milestone_28_router)
 app.include_router(admin_dashboard_router)
 
 
