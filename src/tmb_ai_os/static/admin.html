@@ -25,6 +25,10 @@ section>h2,.section-heading h2{margin:0 0 12px}
 .status.refreshing{background:#dbeafe;color:#1d4ed8}
 .status.paused{background:#f3f4f6;color:#6b7280}
 .status.error{background:#fee2e2;color:#b42318}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.controls select{padding:8px;border:1px solid #d1d5db;border-radius:8px;background:#fff}
+.controls button{padding:8px 12px}
+.countdown{font-size:13px;color:#6b7280}
 </style>
 </head>
 <body>
@@ -45,8 +49,18 @@ section>h2,.section-heading h2{margin:0 0 12px}
   <div>
     <h2 id="alerts-heading">Alert Delivery Metrics</h2>
     <div class="muted" id="alerts-updated">กำลังโหลดข้อมูล...</div>
+    <div class="countdown" id="alert-refresh-countdown"></div>
   </div>
-  <div class="status refreshing" id="alert-live-status">Refreshing</div>
+  <div class="controls">
+    <select id="alert-refresh-interval" aria-label="Alert refresh interval">
+      <option value="10000">10 วินาที</option>
+      <option value="30000">30 วินาที</option>
+      <option value="60000">60 วินาที</option>
+    </select>
+    <button type="button" id="alert-refresh-toggle">ปิด Auto Refresh</button>
+    <button type="button" id="alert-refresh-now">Refresh Alerts</button>
+    <div class="status refreshing" id="alert-live-status">Refreshing</div>
+  </div>
 </div>
 <div class="grid" id="alert-summary"></div>
 </section>
@@ -62,10 +76,19 @@ section>h2,.section-heading h2{margin:0 0 12px}
 </main>
 <script>
 const apiKey=sessionStorage.getItem("tmb_admin_api_key");
-const ALERT_REFRESH_INTERVAL_MS=10000;
+const ALERT_REFRESH_ENABLED_KEY="tmb_alert_refresh_enabled";
+const ALERT_REFRESH_INTERVAL_KEY="tmb_alert_refresh_interval";
+const DEFAULT_ALERT_REFRESH_INTERVAL_MS=10000;
 
 let alertRefreshTimer=null;
+let alertCountdownTimer=null;
 let alertRefreshInFlight=false;
+let alertRefreshEnabled=
+  localStorage.getItem(ALERT_REFRESH_ENABLED_KEY)!=="false";
+let alertRefreshIntervalMs=
+  Number(localStorage.getItem(ALERT_REFRESH_INTERVAL_KEY))
+  ||DEFAULT_ALERT_REFRESH_INTERVAL_MS;
+let nextAlertRefreshAt=null;
 
 if(!apiKey){window.location.href="/admin/login"}
 
@@ -156,20 +179,80 @@ async function loadAlertMetrics(){
   }
 }
 
+function updateRefreshControls(){
+  const toggle=document.getElementById("alert-refresh-toggle");
+  const interval=document.getElementById("alert-refresh-interval");
+
+  toggle.textContent=alertRefreshEnabled
+    ?"ปิด Auto Refresh"
+    :"เปิด Auto Refresh";
+
+  interval.value=String(alertRefreshIntervalMs);
+}
+
+function updateAlertCountdown(){
+  const element=document.getElementById("alert-refresh-countdown");
+
+  if(!alertRefreshEnabled){
+    element.textContent="Auto Refresh ปิดอยู่";
+    return;
+  }
+
+  if(document.hidden){
+    element.textContent="Auto Refresh หยุดชั่วคราว";
+    return;
+  }
+
+  if(nextAlertRefreshAt===null){
+    element.textContent="";
+    return;
+  }
+
+  const remaining=Math.max(
+    0,
+    Math.ceil((nextAlertRefreshAt-Date.now())/1000)
+  );
+
+  element.textContent=`รีเฟรชครั้งถัดไปใน ${remaining} วินาที`;
+}
+
 function stopAlertRefresh(){
   if(alertRefreshTimer!==null){
     window.clearTimeout(alertRefreshTimer);
     alertRefreshTimer=null;
   }
+
+  if(alertCountdownTimer!==null){
+    window.clearInterval(alertCountdownTimer);
+    alertCountdownTimer=null;
+  }
+
+  nextAlertRefreshAt=null;
+  updateAlertCountdown();
 }
 
 function scheduleAlertRefresh(){
   stopAlertRefresh();
 
-  if(document.hidden){
-    setAlertStatus("Paused","paused");
+  if(!alertRefreshEnabled){
+    setAlertStatus("Manual","paused");
+    updateAlertCountdown();
     return;
   }
+
+  if(document.hidden){
+    setAlertStatus("Paused","paused");
+    updateAlertCountdown();
+    return;
+  }
+
+  nextAlertRefreshAt=Date.now()+alertRefreshIntervalMs;
+  updateAlertCountdown();
+
+  alertCountdownTimer=window.setInterval(
+    updateAlertCountdown,
+    1000
+  );
 
   alertRefreshTimer=window.setTimeout(async()=>{
     try{
@@ -179,7 +262,7 @@ function scheduleAlertRefresh(){
     }finally{
       scheduleAlertRefresh();
     }
-  },ALERT_REFRESH_INTERVAL_MS);
+  },alertRefreshIntervalMs);
 }
 
 async function resumeAlertRefresh(){
@@ -189,10 +272,55 @@ async function resumeAlertRefresh(){
     return;
   }
 
+  if(!alertRefreshEnabled){
+    setAlertStatus("Manual","paused");
+    updateAlertCountdown();
+    return;
+  }
+
   try{
     await loadAlertMetrics();
   }catch(error){
     console.error("Alert metrics resume failed",error);
+  }finally{
+    scheduleAlertRefresh();
+  }
+}
+
+function toggleAlertRefresh(){
+  alertRefreshEnabled=!alertRefreshEnabled;
+
+  localStorage.setItem(
+    ALERT_REFRESH_ENABLED_KEY,
+    String(alertRefreshEnabled)
+  );
+
+  updateRefreshControls();
+
+  if(alertRefreshEnabled){
+    void resumeAlertRefresh();
+  }else{
+    stopAlertRefresh();
+    setAlertStatus("Manual","paused");
+  }
+}
+
+function changeAlertRefreshInterval(event){
+  alertRefreshIntervalMs=Number(event.target.value);
+
+  localStorage.setItem(
+    ALERT_REFRESH_INTERVAL_KEY,
+    String(alertRefreshIntervalMs)
+  );
+
+  scheduleAlertRefresh();
+}
+
+async function refreshAlertsNow(){
+  try{
+    await loadAlertMetrics();
+  }catch(error){
+    console.error("Manual alert refresh failed",error);
   }finally{
     scheduleAlertRefresh();
   }
@@ -236,6 +364,19 @@ function logout(){
   sessionStorage.removeItem("tmb_admin_api_key");
   window.location.href="/admin/login";
 }
+
+document.getElementById("alert-refresh-toggle")
+  .addEventListener("click",toggleAlertRefresh);
+
+document.getElementById("alert-refresh-interval")
+  .addEventListener("change",changeAlertRefreshInterval);
+
+document.getElementById("alert-refresh-now")
+  .addEventListener("click",()=>{
+    void refreshAlertsNow();
+  });
+
+updateRefreshControls();
 
 document.addEventListener("visibilitychange",()=>{
   if(document.hidden){
