@@ -4,7 +4,9 @@ import platform
 import sys
 import time
 from datetime import UTC, datetime
-from typing import Final, TypedDict
+from typing import Final
+
+from typing_extensions import TypedDict
 
 _PROCESS_STARTED_AT: Final[float] = time.monotonic()
 
