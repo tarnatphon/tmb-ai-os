@@ -70,3 +70,47 @@ def test_admin_dashboard_displays_live_refresh_status() -> None:
     assert 'setAlertStatus("Live","live")' in html
     assert 'setAlertStatus("Refreshing","refreshing")' in html
     assert 'setAlertStatus("Error","error")' in html
+
+
+def test_admin_dashboard_displays_refresh_controls() -> None:
+    html = admin_dashboard()
+
+    assert 'id="alert-refresh-toggle"' in html
+    assert 'id="alert-refresh-interval"' in html
+    assert 'id="alert-refresh-now"' in html
+    assert 'id="alert-refresh-countdown"' in html
+
+
+def test_admin_dashboard_supports_refresh_intervals() -> None:
+    html = admin_dashboard()
+
+    assert '<option value="10000">' in html
+    assert '<option value="30000">' in html
+    assert '<option value="60000">' in html
+    assert "changeAlertRefreshInterval" in html
+
+
+def test_admin_dashboard_persists_refresh_preferences() -> None:
+    html = admin_dashboard()
+
+    assert 'ALERT_REFRESH_ENABLED_KEY="tmb_alert_refresh_enabled"' in html
+    assert 'ALERT_REFRESH_INTERVAL_KEY="tmb_alert_refresh_interval"' in html
+    assert "localStorage.getItem(ALERT_REFRESH_ENABLED_KEY)" in html
+    assert "localStorage.setItem(" in html
+
+
+def test_admin_dashboard_displays_refresh_countdown() -> None:
+    html = admin_dashboard()
+
+    assert "updateAlertCountdown" in html
+    assert "nextAlertRefreshAt" in html
+    assert "window.setInterval" in html
+    assert "รีเฟรชครั้งถัดไปใน" in html
+
+
+def test_admin_dashboard_supports_manual_alert_refresh() -> None:
+    html = admin_dashboard()
+
+    assert "refreshAlertsNow" in html
+    assert "Manual alert refresh failed" in html
+    assert 'addEventListener("click"' in html
