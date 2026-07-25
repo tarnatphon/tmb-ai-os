@@ -98,7 +98,7 @@ def test_alert_metrics_are_optional() -> None:
     assert "tmb_alerts_routed_total" not in output
 
 
-def test_prometheus_api_includes_alert_metrics() -> None:
+def test_prometheus_api_includes_alert_metrics(monkeypatch) -> None:
     from tmb_ai_os.alert_observability import (
         alert_observability,
         reset_alert_metrics,
@@ -107,7 +107,33 @@ def test_prometheus_api_includes_alert_metrics() -> None:
 
     reset_alert_metrics()
 
-    response = prometheus_metrics()
+    from types import SimpleNamespace
+
+    operations_snapshot = SimpleNamespace(
+        ai=SimpleNamespace(
+            requests=0,
+            input_tokens=0,
+            output_tokens=0,
+            estimated_cost_usd=0.0,
+        ),
+        agents=SimpleNamespace(
+            total_runs=0,
+            successful_runs=0,
+            failed_runs=0,
+        ),
+        workflows=SimpleNamespace(
+            total_runs=0,
+            active_runs=0,
+            failed_runs=0,
+        ),
+    )
+
+    monkeypatch.setattr(
+        "tmb_ai_os.api_v9.get_operations_metrics",
+        lambda _db: operations_snapshot,
+    )
+
+    response = prometheus_metrics(None)  # type: ignore[arg-type]
     body = response.body.decode()
 
     assert response.status_code == 200
@@ -141,6 +167,9 @@ def test_prometheus_endpoint_exports_shared_alert_metrics() -> None:
         assert "tmb_alerts_routed_total 1" in response.text
     finally:
         reset_alert_metrics()
+    assert "tmb_ai_requests_total 0" in response.text
+    assert "tmb_agent_runs_total 0" in response.text
+    assert "tmb_workflow_runs_total 0" in response.text
 
 
 def test_operations_metrics_are_optional() -> None:

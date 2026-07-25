@@ -61,11 +61,12 @@ def http_request_metrics() -> dict[str, object]:
 
 
 @router.get("/metrics/prometheus")
-def prometheus_metrics() -> Response:
+def prometheus_metrics(db: DbSession) -> Response:
     return Response(
         content=render_prometheus_metrics(
             get_http_metrics(),
             get_alert_metrics(),
+            operations_snapshot=get_operations_metrics(db),
         ),
         media_type="text/plain; version=0.0.4",
     )
