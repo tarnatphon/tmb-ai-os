@@ -27,10 +27,35 @@ class ContentMetrics:
 
 
 @dataclass(frozen=True)
+class AiMetrics:
+    requests: int
+    input_tokens: int
+    output_tokens: int
+    estimated_cost_usd: float
+
+
+@dataclass(frozen=True)
+class AgentMetrics:
+    total_runs: int
+    successful_runs: int
+    failed_runs: int
+
+
+@dataclass(frozen=True)
+class WorkflowMetrics:
+    total_runs: int
+    active_runs: int
+    failed_runs: int
+
+
+@dataclass(frozen=True)
 class OperationsMetrics:
     content: ContentMetrics
     publish_queue: PublishQueueMetrics
     audit_events: int
+    ai: AiMetrics
+    agents: AgentMetrics
+    workflows: WorkflowMetrics
 
 
 def _count_by_status(
@@ -68,6 +93,40 @@ def get_content_metrics(
     )
 
 
+def get_ai_metrics() -> AiMetrics:
+    """Return the current AI usage metrics.
+
+    Runtime persistence will be connected in a later Phase 7.2 change.
+    """
+
+    return AiMetrics(
+        requests=0,
+        input_tokens=0,
+        output_tokens=0,
+        estimated_cost_usd=0.0,
+    )
+
+
+def get_agent_metrics() -> AgentMetrics:
+    """Return the current AI agent execution metrics."""
+
+    return AgentMetrics(
+        total_runs=0,
+        successful_runs=0,
+        failed_runs=0,
+    )
+
+
+def get_workflow_metrics() -> WorkflowMetrics:
+    """Return the current workflow execution metrics."""
+
+    return WorkflowMetrics(
+        total_runs=0,
+        active_runs=0,
+        failed_runs=0,
+    )
+
+
 def get_operations_metrics(
     session: Session,
 ) -> OperationsMetrics:
@@ -76,4 +135,7 @@ def get_operations_metrics(
         content=get_content_metrics(session),
         publish_queue=get_publish_queue_metrics(session),
         audit_events=int(audit_value or 0),
+        ai=get_ai_metrics(),
+        agents=get_agent_metrics(),
+        workflows=get_workflow_metrics(),
     )
