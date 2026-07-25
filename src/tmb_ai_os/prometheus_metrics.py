@@ -1,5 +1,11 @@
 from tmb_ai_os.alert_observability import AlertMetricsSnapshot
 from tmb_ai_os.http_metrics import HttpMetricsSnapshot
+from tmb_ai_os.operations_metrics import (
+    AgentMetrics,
+    AiMetrics,
+    OperationsMetrics,
+    WorkflowMetrics,
+)
 
 
 def _escape_label(value: str) -> str:
@@ -74,13 +80,69 @@ def _render_alert_metrics(snapshot: AlertMetricsSnapshot) -> list[str]:
     ]
 
 
+def _render_ai_metrics(snapshot: AiMetrics) -> list[str]:
+    return [
+        "# HELP tmb_ai_requests_total Total number of AI requests.",
+        "# TYPE tmb_ai_requests_total counter",
+        f"tmb_ai_requests_total {snapshot.requests}",
+        "# HELP tmb_ai_input_tokens_total Total number of AI input tokens.",
+        "# TYPE tmb_ai_input_tokens_total counter",
+        f"tmb_ai_input_tokens_total {snapshot.input_tokens}",
+        "# HELP tmb_ai_output_tokens_total Total number of AI output tokens.",
+        "# TYPE tmb_ai_output_tokens_total counter",
+        f"tmb_ai_output_tokens_total {snapshot.output_tokens}",
+        "# HELP tmb_ai_cost_usd_total Estimated AI cost in US dollars.",
+        "# TYPE tmb_ai_cost_usd_total counter",
+        f"tmb_ai_cost_usd_total {snapshot.estimated_cost_usd}",
+    ]
+
+
+def _render_agent_metrics(snapshot: AgentMetrics) -> list[str]:
+    return [
+        "# HELP tmb_agent_runs_total Total number of AI agent runs.",
+        "# TYPE tmb_agent_runs_total counter",
+        f"tmb_agent_runs_total {snapshot.total_runs}",
+        "# HELP tmb_agent_successful_runs_total Successful AI agent runs.",
+        "# TYPE tmb_agent_successful_runs_total counter",
+        f"tmb_agent_successful_runs_total {snapshot.successful_runs}",
+        "# HELP tmb_agent_failed_runs_total Failed AI agent runs.",
+        "# TYPE tmb_agent_failed_runs_total counter",
+        f"tmb_agent_failed_runs_total {snapshot.failed_runs}",
+    ]
+
+
+def _render_workflow_metrics(snapshot: WorkflowMetrics) -> list[str]:
+    return [
+        "# HELP tmb_workflow_runs_total Total number of workflow runs.",
+        "# TYPE tmb_workflow_runs_total counter",
+        f"tmb_workflow_runs_total {snapshot.total_runs}",
+        "# HELP tmb_workflow_active_runs Current active workflow runs.",
+        "# TYPE tmb_workflow_active_runs gauge",
+        f"tmb_workflow_active_runs {snapshot.active_runs}",
+        "# HELP tmb_workflow_failed_runs_total Failed workflow runs.",
+        "# TYPE tmb_workflow_failed_runs_total counter",
+        f"tmb_workflow_failed_runs_total {snapshot.failed_runs}",
+    ]
+
+
+def _render_operations_metrics(snapshot: OperationsMetrics) -> list[str]:
+    lines = _render_ai_metrics(snapshot.ai)
+    lines.extend(_render_agent_metrics(snapshot.agents))
+    lines.extend(_render_workflow_metrics(snapshot.workflows))
+    return lines
+
+
 def render_prometheus_metrics(
     snapshot: HttpMetricsSnapshot,
     alert_snapshot: AlertMetricsSnapshot | None = None,
+    operations_snapshot: OperationsMetrics | None = None,
 ) -> str:
     lines = _render_http_metrics(snapshot)
 
     if alert_snapshot is not None:
         lines.extend(_render_alert_metrics(alert_snapshot))
+
+    if operations_snapshot is not None:
+        lines.extend(_render_operations_metrics(operations_snapshot))
 
     return "\n".join(lines) + "\n"
