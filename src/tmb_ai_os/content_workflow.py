@@ -10,6 +10,10 @@ from .multichannel import (
     ChannelOutput,
     MultiChannelContentService,
 )
+from .operations_metrics import (
+    record_workflow_finished,
+    record_workflow_started,
+)
 
 
 @dataclass(frozen=True)
@@ -42,32 +46,38 @@ class ContentWorkflowService:
         session: Session,
         path: Path,
     ) -> ContentWorkflowResult:
-        outputs = tuple(self.generator_service.generate(path))
-        prompt_hash = self._hash_outputs(outputs)
+        record_workflow_started()
 
-        channels = {output.channel.value: output.text or "" for output in outputs if output.text}
-
-        if not channels:
-            raise RuntimeError("Generation returned no publishable content")
-
-        brief = self.generator_service.content_repository.load_brief(path)
-
-        stored = self.history_repository.create(
-            session,
-            ContentCreate(
-                topic=brief.topic,
-                pillar=brief.pillar,
-                status="generated",
-                channels=channels,
+        try:
+            outputs = tuple(self.generator_service.generate(path))
+            prompt_hash = self._hash_outputs(outputs)
+            channels = {
+                output.channel.value: output.text or "" for output in outputs if output.text
+            }
+            if not channels:
+                raise RuntimeError("Generation returned no publishable content")
+            brief = self.generator_service.content_repository.load_brief(path)
+            stored = self.history_repository.create(
+                session,
+                ContentCreate(
+                    topic=brief.topic,
+                    pillar=brief.pillar,
+                    status="generated",
+                    channels=channels,
+                    prompt_hash=prompt_hash,
+                ),
+            )
+            _workflow_result = ContentWorkflowResult(
+                outputs=outputs,
+                stored=stored,
                 prompt_hash=prompt_hash,
-            ),
-        )
+            )
+        except Exception:
+            record_workflow_finished(failed=True)
+            raise
 
-        return ContentWorkflowResult(
-            outputs=outputs,
-            stored=stored,
-            prompt_hash=prompt_hash,
-        )
+        record_workflow_finished()
+        return _workflow_result
 
     @staticmethod
     def _hash_outputs(

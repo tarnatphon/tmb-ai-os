@@ -92,3 +92,57 @@ def test_preview_does_not_store(
     assert result.stored is None
     assert len(result.outputs) == 2
     session.close()
+
+
+def test_generate_and_store_records_success_metrics(
+    tmp_path: Path,
+) -> None:
+    from tmb_ai_os.operations_metrics import (
+        get_workflow_metrics,
+        reset_workflow_metrics,
+    )
+
+    reset_workflow_metrics()
+    service, brief, session = make_service(tmp_path)
+
+    try:
+        service.generate_and_store(session, brief)
+
+        metrics = get_workflow_metrics()
+        assert metrics.total_runs == 1
+        assert metrics.active_runs == 0
+        assert metrics.failed_runs == 0
+    finally:
+        session.close()
+        reset_workflow_metrics()
+
+
+def test_generate_and_store_records_failure_metrics(
+    tmp_path: Path,
+) -> None:
+    import pytest
+
+    from tmb_ai_os.operations_metrics import (
+        get_workflow_metrics,
+        reset_workflow_metrics,
+    )
+
+    reset_workflow_metrics()
+    service, brief, session = make_service(tmp_path)
+
+    def fail_generate(path: Path):
+        raise RuntimeError("generation failed")
+
+    service.generator_service.generate = fail_generate
+
+    try:
+        with pytest.raises(RuntimeError, match="generation failed"):
+            service.generate_and_store(session, brief)
+
+        metrics = get_workflow_metrics()
+        assert metrics.total_runs == 1
+        assert metrics.active_runs == 0
+        assert metrics.failed_runs == 1
+    finally:
+        session.close()
+        reset_workflow_metrics()
