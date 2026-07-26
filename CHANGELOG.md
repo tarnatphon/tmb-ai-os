@@ -1,5 +1,34 @@
 # Changelog
 
+
+## Phase 7.2 — Workflow Runtime Metrics
+
+Completed workflow-level operational metrics across runtime collection, API exposure, Prometheus rendering, and test isolation.
+
+### Added
+
+- workflow runtime metrics collector
+- workflow success and failure tracking in `ContentWorkflowService`
+- workflow metrics in `/v9/metrics/operations`
+- Prometheus workflow counters and active-run gauge
+- API and renderer regression tests
+- automatic metrics reset between workflow tests
+
+### Metrics
+
+- `tmb_workflow_runs_total`
+- `tmb_workflow_total_runs`
+- `tmb_workflow_active_runs`
+- `tmb_workflow_failed_runs_total`
+
+### Validation
+
+- 218 tests passed
+- Ruff checks passed
+- Ruff format validation passed
+- mypy passed
+- authentication migration validation passed
+
 All notable changes follow Semantic Versioning and Conventional Commits.
 
 ## [2.0.0-dev.1] - 2026-07-14
