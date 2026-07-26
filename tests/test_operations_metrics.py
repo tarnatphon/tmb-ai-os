@@ -92,3 +92,64 @@ def test_operations_metrics_include_platform_metrics() -> None:
     assert metrics.workflows.total_runs == 0
 
     session.close()
+
+
+def test_workflow_runtime_metrics_track_lifecycle() -> None:
+    from tmb_ai_os.operations_metrics import (
+        get_workflow_metrics,
+        record_workflow_finished,
+        record_workflow_started,
+        reset_workflow_metrics,
+    )
+
+    reset_workflow_metrics()
+
+    record_workflow_started()
+
+    running = get_workflow_metrics()
+    assert running.total_runs == 1
+    assert running.active_runs == 1
+    assert running.failed_runs == 0
+
+    record_workflow_finished()
+
+    completed = get_workflow_metrics()
+    assert completed.total_runs == 1
+    assert completed.active_runs == 0
+    assert completed.failed_runs == 0
+
+
+def test_workflow_runtime_metrics_track_failures() -> None:
+    from tmb_ai_os.operations_metrics import (
+        get_workflow_metrics,
+        record_workflow_finished,
+        record_workflow_started,
+        reset_workflow_metrics,
+    )
+
+    reset_workflow_metrics()
+
+    record_workflow_started()
+    record_workflow_finished(failed=True)
+
+    metrics = get_workflow_metrics()
+    assert metrics.total_runs == 1
+    assert metrics.active_runs == 0
+    assert metrics.failed_runs == 1
+
+
+def test_workflow_runtime_metrics_reject_unmatched_finish() -> None:
+    import pytest
+
+    from tmb_ai_os.operations_metrics import (
+        record_workflow_finished,
+        reset_workflow_metrics,
+    )
+
+    reset_workflow_metrics()
+
+    with pytest.raises(
+        RuntimeError,
+        match="Cannot finish a workflow when none are active",
+    ):
+        record_workflow_finished()

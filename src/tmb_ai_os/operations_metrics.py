@@ -153,14 +153,55 @@ def get_agent_metrics() -> AgentMetrics:
         )
 
 
-def get_workflow_metrics() -> WorkflowMetrics:
-    """Return the current workflow execution metrics."""
+_workflow_metrics_lock = Lock()
+_workflow_total_runs = 0
+_workflow_active_runs = 0
+_workflow_failed_runs = 0
 
-    return WorkflowMetrics(
-        total_runs=0,
-        active_runs=0,
-        failed_runs=0,
-    )
+
+def record_workflow_started() -> None:
+    global _workflow_total_runs
+    global _workflow_active_runs
+
+    with _workflow_metrics_lock:
+        _workflow_total_runs += 1
+        _workflow_active_runs += 1
+
+
+def record_workflow_finished(*, failed: bool = False) -> None:
+    global _workflow_active_runs
+    global _workflow_failed_runs
+
+    with _workflow_metrics_lock:
+        if _workflow_active_runs <= 0:
+            raise RuntimeError("Cannot finish a workflow when none are active")
+
+        _workflow_active_runs -= 1
+
+        if failed:
+            _workflow_failed_runs += 1
+
+
+def reset_workflow_metrics() -> None:
+    global _workflow_total_runs
+    global _workflow_active_runs
+    global _workflow_failed_runs
+
+    with _workflow_metrics_lock:
+        _workflow_total_runs = 0
+        _workflow_active_runs = 0
+        _workflow_failed_runs = 0
+
+
+def get_workflow_metrics() -> WorkflowMetrics:
+    """Return a snapshot of the current workflow execution metrics."""
+
+    with _workflow_metrics_lock:
+        return WorkflowMetrics(
+            total_runs=_workflow_total_runs,
+            active_runs=_workflow_active_runs,
+            failed_runs=_workflow_failed_runs,
+        )
 
 
 def get_operations_metrics(
