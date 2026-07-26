@@ -4,6 +4,10 @@ from tmb_ai_os.agents import (
     AgentResult,
     AgentRole,
 )
+from tmb_ai_os.operations_metrics import (
+    get_agent_metrics,
+    reset_agent_metrics,
+)
 from tmb_ai_os.orchestrator import ContentAgentOrchestrator
 
 
@@ -48,3 +52,31 @@ def test_orchestrator_returns_rejected_qa_result() -> None:
 
     assert run.approved is False
     assert run.results[-1].approved is False
+
+
+def test_orchestrator_records_success_metrics() -> None:
+    reset_agent_metrics()
+
+    ContentAgentOrchestrator(build_registry(True)).run(
+        AgentContext(task="Create content", source="Verified source")
+    )
+
+    metrics = get_agent_metrics()
+
+    assert metrics.total_runs == 1
+    assert metrics.successful_runs == 1
+    assert metrics.failed_runs == 0
+
+
+def test_orchestrator_records_failed_metrics() -> None:
+    reset_agent_metrics()
+
+    ContentAgentOrchestrator(build_registry(False)).run(
+        AgentContext(task="Create content", source="Verified source")
+    )
+
+    metrics = get_agent_metrics()
+
+    assert metrics.total_runs == 1
+    assert metrics.successful_runs == 0
+    assert metrics.failed_runs == 1
