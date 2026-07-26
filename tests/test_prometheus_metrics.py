@@ -248,6 +248,8 @@ def test_render_prometheus_operations_metrics() -> None:
     assert "tmb_agent_successful_runs_total 6" in output
     assert "tmb_agent_failed_runs_total 2" in output
 
+    assert "# TYPE tmb_workflow_total_runs counter" in output
+    assert "tmb_workflow_total_runs 7" in output
     assert "# TYPE tmb_workflow_active_runs gauge" in output
     assert "tmb_workflow_runs_total 7" in output
     assert "tmb_workflow_active_runs 1" in output
