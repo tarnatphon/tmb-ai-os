@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from threading import Lock
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -107,14 +108,49 @@ def get_ai_metrics() -> AiMetrics:
     )
 
 
-def get_agent_metrics() -> AgentMetrics:
-    """Return the current AI agent execution metrics."""
+_agent_metrics_lock = Lock()
+_agent_total_runs = 0
+_agent_successful_runs = 0
+_agent_failed_runs = 0
 
-    return AgentMetrics(
-        total_runs=0,
-        successful_runs=0,
-        failed_runs=0,
-    )
+
+def record_agent_run(*, approved: bool) -> None:
+    """Record one completed AI agent orchestration run."""
+
+    global _agent_total_runs
+    global _agent_successful_runs
+    global _agent_failed_runs
+
+    with _agent_metrics_lock:
+        _agent_total_runs += 1
+        if approved:
+            _agent_successful_runs += 1
+        else:
+            _agent_failed_runs += 1
+
+
+def reset_agent_metrics() -> None:
+    """Reset AI agent metrics for isolated tests."""
+
+    global _agent_total_runs
+    global _agent_successful_runs
+    global _agent_failed_runs
+
+    with _agent_metrics_lock:
+        _agent_total_runs = 0
+        _agent_successful_runs = 0
+        _agent_failed_runs = 0
+
+
+def get_agent_metrics() -> AgentMetrics:
+    """Return a snapshot of the current AI agent execution metrics."""
+
+    with _agent_metrics_lock:
+        return AgentMetrics(
+            total_runs=_agent_total_runs,
+            successful_runs=_agent_successful_runs,
+            failed_runs=_agent_failed_runs,
+        )
 
 
 def get_workflow_metrics() -> WorkflowMetrics:
