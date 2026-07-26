@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 from sqlalchemy.orm import Session
 
 from tmb_ai_os.channels import Channel
@@ -13,6 +14,18 @@ from tmb_ai_os.knowledge import (
 )
 from tmb_ai_os.multichannel import MultiChannelContentService
 from tmb_ai_os.prompt_sdk import PromptBuilder
+
+
+@pytest.fixture(autouse=True)
+def reset_workflow_metrics_between_tests():
+    from tmb_ai_os.operations_metrics import reset_workflow_metrics
+
+    reset_workflow_metrics()
+
+    try:
+        yield
+    finally:
+        reset_workflow_metrics()
 
 
 class FakeGenerator:
@@ -120,8 +133,6 @@ def test_generate_and_store_records_success_metrics(
 def test_generate_and_store_records_failure_metrics(
     tmp_path: Path,
 ) -> None:
-    import pytest
-
     from tmb_ai_os.operations_metrics import (
         get_workflow_metrics,
         reset_workflow_metrics,
