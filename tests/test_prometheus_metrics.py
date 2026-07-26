@@ -148,7 +148,10 @@ def test_prometheus_api_includes_alert_metrics(monkeypatch) -> None:
 
 
 def test_prometheus_endpoint_exports_shared_alert_metrics() -> None:
+    from tmb_ai_os.operations_metrics import reset_agent_metrics
+
     reset_alert_metrics()
+    reset_agent_metrics()
 
     try:
         result = RoutingResult(
@@ -167,6 +170,7 @@ def test_prometheus_endpoint_exports_shared_alert_metrics() -> None:
         assert "tmb_alerts_routed_total 1" in response.text
     finally:
         reset_alert_metrics()
+        reset_agent_metrics()
     assert "tmb_ai_requests_total 0" in response.text
     assert "tmb_agent_runs_total 0" in response.text
     assert "tmb_workflow_runs_total 0" in response.text

@@ -1,6 +1,7 @@
 from dataclasses import dataclass, replace
 
 from .agents import AgentContext, AgentRegistry, AgentResult, AgentRole
+from .operations_metrics import record_agent_run
 
 
 @dataclass(frozen=True)
@@ -45,6 +46,8 @@ class ContentAgentOrchestrator:
             )
 
             if role is AgentRole.QA_REVIEWER and not result.approved:
+                record_agent_run(approved=False)
                 return WorkflowRun(results=tuple(results), approved=False)
 
+        record_agent_run(approved=True)
         return WorkflowRun(results=tuple(results), approved=True)
