@@ -3,7 +3,7 @@ name: API Key Telemetry
 on:
   pull_request:
   push:
-    branches: [main, develop]
+    branches: [main, develop, "feat/**"]
 
 jobs:
   telemetry:

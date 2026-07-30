@@ -73,6 +73,12 @@ class GenerateRequest(BaseModel):
 
 
 @app.get("/health")
+@app.get("/api/v1/health")
+def health_v1() -> dict[str, str]:
+    return public_health_report(
+        service="tmb-ai-os",
+        version=app.version,
+    )
 def health() -> dict[str, str]:
     return public_health_report(
         service="tmb-ai-os",
@@ -104,3 +110,12 @@ def generate(request: GenerateRequest) -> dict[str, str]:
         return {"model": result.model, "text": result.text}
     except (FileNotFoundError, ValueError, RuntimeError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/v1/plugins")
+def list_plugins() -> list[dict[str, str]]:
+    return [
+        {
+            "name": "example-foundation"
+        }
+    ]

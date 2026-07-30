@@ -2,7 +2,7 @@ name: Legacy Call-Site Guard
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, "feat/**"]
   pull_request:
 
 jobs:

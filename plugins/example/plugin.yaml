@@ -1,0 +1,10 @@
+name: example-foundation
+version: 0.1.0
+enabled: true
+capabilities:
+  - health
+  - diagnostics
+events:
+  - system.started
+permissions:
+  - system.read
