@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 from threading import RLock
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar, cast
 
 T = TypeVar("T")
 
@@ -57,6 +57,43 @@ class ServiceContainer:
                 value=instance,
             )
 
+
+    def register_singleton(
+        self,
+        service_type: type[T],
+        factory: Callable[[ServiceContainer], T],
+    ) -> None:
+        with self._lock:
+            if service_type in self._services:
+                raise DuplicateServiceError(service_type.__name__)
+
+            self._services[service_type] = Registration(
+                lifetime=ServiceLifetime.SINGLETON,
+                factory=factory,
+            )
+
+    def register_factory(
+        self,
+        service_type: type[T],
+        factory: Callable[[ServiceContainer], T],
+    ) -> None:
+        with self._lock:
+            if service_type in self._services:
+                raise DuplicateServiceError(service_type.__name__)
+
+            self._services[service_type] = Registration(
+                lifetime=ServiceLifetime.FACTORY,
+                factory=factory,
+            )
+
+    def has(self, service_type: type[Any]) -> bool:
+        return service_type in self._services
+
+    def clear(self) -> None:
+        with self._lock:
+            self._services.clear()
+            self._singletons.clear()
+
     def resolve(self, service_type: type[T]) -> T:
         with self._lock:
             registration = self._services.get(service_type)
@@ -67,6 +104,11 @@ class ServiceContainer:
             if registration.lifetime is ServiceLifetime.INSTANCE:
                 return registration.value  # type: ignore[return-value]
 
-            raise NotImplementedError(
-                "Singleton and Factory support will be added in PR-001 Phase 2."
-            )
+            if registration.lifetime is ServiceLifetime.SINGLETON:
+                if service_type not in self._singletons:
+                    assert registration.factory is not None
+                    self._singletons[service_type] = registration.factory(self)
+                return cast(T, self._singletons[service_type])
+
+            assert registration.factory is not None
+            return cast(T, registration.factory(self))
