@@ -79,6 +79,8 @@ def health_v1() -> dict[str, str]:
         service="tmb-ai-os",
         version=app.version,
     )
+
+
 def health() -> dict[str, str]:
     return public_health_report(
         service="tmb-ai-os",
@@ -114,8 +116,4 @@ def generate(request: GenerateRequest) -> dict[str, str]:
 
 @app.get("/api/v1/plugins")
 def list_plugins() -> list[dict[str, str]]:
-    return [
-        {
-            "name": "example-foundation"
-        }
-    ]
+    return [{"name": "example-foundation"}]

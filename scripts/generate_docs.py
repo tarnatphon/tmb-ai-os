@@ -22,6 +22,7 @@ PHASE_FILES = {
     ],
 }
 
+
 def validate_phase(phase: str) -> int:
     files = PHASE_FILES[phase]
     missing = []
@@ -56,10 +57,9 @@ def validate_phase(phase: str) -> int:
     print("\nVALIDATION PASSED")
     return 0
 
+
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Validate generated TMB AI OS documentation."
-    )
+    parser = argparse.ArgumentParser(description="Validate generated TMB AI OS documentation.")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--phase", choices=sorted(PHASE_FILES))
     group.add_argument("--all", action="store_true")
@@ -72,6 +72,7 @@ def main() -> int:
         result = max(result, validate_phase(phase))
 
     return result
+
 
 if __name__ == "__main__":
     sys.exit(main())
