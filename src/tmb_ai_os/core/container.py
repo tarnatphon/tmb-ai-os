@@ -57,7 +57,6 @@ class ServiceContainer:
                 value=instance,
             )
 
-
     def register_singleton(
         self,
         service_type: type[T],
