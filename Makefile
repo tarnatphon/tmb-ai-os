@@ -23,17 +23,17 @@ test:
 	$(PY) -m pytest -q
 
 lint:
-	$(VENV)/bin/ruff check app tests
+	$(VENV)/bin/ruff check app src tests
 
 format:
-	$(VENV)/bin/ruff format app tests
-	$(VENV)/bin/ruff check --fix app tests
+	$(VENV)/bin/ruff format app src tests
+	$(VENV)/bin/ruff check --fix app src tests
 
 format-check:
-	$(VENV)/bin/ruff format --check app tests
+	$(VENV)/bin/ruff format --check app src tests
 
 compile:
-	$(PY) -m compileall -q app tests
+	$(PY) -m compileall -q app src tests
 
 check: compile format-check lint test
 
