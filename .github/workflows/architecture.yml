@@ -1,9 +1,10 @@
 name: Architecture Guard
 
 on:
-  push:
-    branches: [main, develop, "feat/**"]
   pull_request:
+    branches: [main]
+  push:
+    branches: [main]
 
 jobs:
   architecture:

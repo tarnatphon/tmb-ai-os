@@ -2,8 +2,9 @@ name: Maintenance Validation
 
 on:
   pull_request:
+    branches: [main]
   push:
-    branches: [main, develop, "feat/**"]
+    branches: [main]
 
 jobs:
   maintenance:

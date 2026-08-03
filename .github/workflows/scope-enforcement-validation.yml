@@ -2,8 +2,9 @@ name: Scope Enforcement Validation
 
 on:
   pull_request:
+    branches: [main]
   push:
-    branches: [main, develop, "feat/**"]
+    branches: [main]
 
 jobs:
   scope-enforcement:
