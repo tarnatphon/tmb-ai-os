@@ -69,7 +69,11 @@ def test_python_environment_check_rejects_unsupported_version(
 
 def test_python_environment_check_requires_virtual_environment(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    monkeypatch.delenv("CI", raising=False)
+
     write_pyproject(tmp_path)
     check = PythonEnvironmentCheck(
         root=tmp_path,
