@@ -4,7 +4,11 @@ import argparse
 from pathlib import Path
 from typing import Any
 
-from ..checks import PythonEnvironmentCheck, RepositoryStructureCheck
+from ..checks import (
+    GitRepositoryCheck,
+    PythonEnvironmentCheck,
+    RepositoryStructureCheck,
+)
 from ..validation import run_checks
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -29,6 +33,7 @@ def run(args: argparse.Namespace) -> int:
         (
             RepositoryStructureCheck(ROOT),
             PythonEnvironmentCheck(ROOT),
+            GitRepositoryCheck(ROOT),
         )
     )
 
