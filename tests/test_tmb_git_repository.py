@@ -128,3 +128,20 @@ def test_git_repository_check_requires_origin_remote(
 
     assert result.passed is False
     assert "origin remote" in result.message
+
+
+def test_git_repository_check_supports_detached_head(
+    tmp_path: Path,
+) -> None:
+    responses = valid_responses()
+    responses[("branch", "--show-current")] = (0, "")
+    responses[("rev-parse", "--short", "HEAD")] = (0, "abc1234\n")
+    check = GitRepositoryCheck(
+        root=tmp_path,
+        runner=FakeGitRunner(responses),
+    )
+
+    result = check.run()
+
+    assert result.passed is True
+    assert "branch detached@abc1234" in result.message

@@ -61,8 +61,20 @@ class GitRepositoryCheck:
 
         branch = self.runner(self.root, ("branch", "--show-current"))
         branch_name = branch.stdout.strip()
-        if branch.returncode != 0 or not branch_name:
+
+        if branch.returncode != 0:
             errors.append("Unable to determine current Git branch")
+        elif not branch_name:
+            head = self.runner(
+                self.root,
+                ("rev-parse", "--short", "HEAD"),
+            )
+            short_sha = head.stdout.strip()
+
+            if head.returncode != 0 or not short_sha:
+                errors.append("Unable to determine current Git branch")
+            else:
+                branch_name = f"detached@{short_sha}"
 
         origin = self.runner(self.root, ("remote", "get-url", "origin"))
         if origin.returncode != 0 or not origin.stdout.strip():
