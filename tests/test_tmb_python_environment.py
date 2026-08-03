@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from tools.tmb.checks.python_environment import PythonEnvironmentCheck
 
 
@@ -99,3 +101,23 @@ def test_python_environment_check_detects_missing_modules(
 
     assert result.passed is False
     assert "Missing development modules: mypy" in result.message
+
+
+def test_python_environment_check_allows_ci_managed_environment(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    write_pyproject(tmp_path)
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    check = PythonEnvironmentCheck(
+        root=tmp_path,
+        python_version="3.12.13",
+        prefix="/opt/hostedtoolcache/Python/3.12.13/x64",
+        base_prefix="/opt/hostedtoolcache/Python/3.12.13/x64",
+        module_finder=modules_available,
+    )
+
+    result = check.run()
+
+    assert result.passed is True
+    assert result.message == "Python 3.12.13 environment is ready."

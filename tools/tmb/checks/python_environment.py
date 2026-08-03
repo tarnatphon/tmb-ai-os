@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 import platform
 import sys
 import tomllib
@@ -48,7 +49,9 @@ class PythonEnvironmentCheck:
         else:
             errors.extend(self._validate_python_requirement(pyproject_path))
 
-        if self.prefix == self.base_prefix:
+        running_in_ci = os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true"
+
+        if self.prefix == self.base_prefix and not running_in_ci:
             errors.append("Python virtual environment is not active")
 
         missing_modules = [
