@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 from typing import Any
 
+from ..checks import RepositoryStructureCheck
+from ..validation import run_checks
 
-def register(
-    subparsers: Any,
-) -> None:
+ROOT = Path(__file__).resolve().parents[3]
+
+
+def register(subparsers: Any) -> None:
     """Register the repository validation command."""
 
     parser = subparsers.add_parser(
@@ -18,8 +22,18 @@ def register(
 
 
 def run(args: argparse.Namespace) -> int:
-    """Run the repository validation command stub."""
+    """Run repository validation checks."""
 
     del args
-    print("Repository validation PASSED")
-    return 0
+    summary = run_checks((RepositoryStructureCheck(ROOT),))
+
+    if summary.passed:
+        print("Repository validation PASSED")
+        return 0
+
+    print("Repository validation FAILED")
+    for result in summary.results:
+        if not result.passed:
+            print(f"- {result.name}: {result.message}")
+
+    return 1
