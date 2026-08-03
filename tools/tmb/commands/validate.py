@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 from typing import Any
 
-from ..checks import RepositoryStructureCheck
+from ..checks import PythonEnvironmentCheck, RepositoryStructureCheck
 from ..validation import run_checks
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -25,7 +25,12 @@ def run(args: argparse.Namespace) -> int:
     """Run repository validation checks."""
 
     del args
-    summary = run_checks((RepositoryStructureCheck(ROOT),))
+    summary = run_checks(
+        (
+            RepositoryStructureCheck(ROOT),
+            PythonEnvironmentCheck(ROOT),
+        )
+    )
 
     if summary.passed:
         print("Repository validation PASSED")
