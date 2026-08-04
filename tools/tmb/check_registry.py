@@ -6,6 +6,7 @@ from .checks import (
     GitRepositoryCheck,
     PythonEnvironmentCheck,
     RepositoryStructureCheck,
+    ToolchainCheck,
     WorkflowStructureCheck,
 )
 from .validation import ValidationCheck
@@ -19,4 +20,5 @@ def create_default_checks(root: Path) -> tuple[ValidationCheck, ...]:
         PythonEnvironmentCheck(root),
         GitRepositoryCheck(root),
         WorkflowStructureCheck(root),
+        ToolchainCheck(),
     )

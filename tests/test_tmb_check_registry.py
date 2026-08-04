@@ -5,6 +5,7 @@ from tools.tmb.checks import (
     GitRepositoryCheck,
     PythonEnvironmentCheck,
     RepositoryStructureCheck,
+    ToolchainCheck,
     WorkflowStructureCheck,
 )
 
@@ -19,4 +20,5 @@ def test_default_check_registry_preserves_execution_order(
         PythonEnvironmentCheck,
         GitRepositoryCheck,
         WorkflowStructureCheck,
+        ToolchainCheck,
     ]
