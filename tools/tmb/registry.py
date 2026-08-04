@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from .commands import validate
+from .commands import doctor, validate
 
 CommandRegistrar = Callable[[Any], None]
 
@@ -17,7 +17,10 @@ class Command:
     register: CommandRegistrar
 
 
-COMMANDS = (Command(name="validate", register=validate.register),)
+COMMANDS = (
+    Command(name="validate", register=validate.register),
+    Command(name="doctor", register=doctor.register),
+)
 
 
 def register_commands(

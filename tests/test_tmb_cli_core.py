@@ -6,7 +6,7 @@ from tools.tmb.registry import COMMANDS
 
 
 def test_registry_contains_validate_command() -> None:
-    assert [command.name for command in COMMANDS] == ["validate"]
+    assert [command.name for command in COMMANDS] == ["validate", "doctor"]
 
 
 def test_validate_appears_in_help() -> None:
