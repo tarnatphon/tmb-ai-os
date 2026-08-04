@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from .commands import doctor, validate, version
+from .commands import doctor, release, validate, version
 
 CommandRegistrar = Callable[[Any], None]
 
@@ -21,6 +21,7 @@ COMMANDS = (
     Command(name="validate", register=validate.register),
     Command(name="doctor", register=doctor.register),
     Command(name="version", register=version.register),
+    Command(name="release", register=release.register),
 )
 
 
