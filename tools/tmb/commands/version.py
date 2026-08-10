@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from ..output import build_envelope, emit_json
+
 ROOT = Path(__file__).resolve().parents[3]
 
 GitRunner = Callable[
@@ -120,6 +122,12 @@ def register(subparsers: Any) -> None:
         help="Show and compare TMB AI OS version sources.",
         description="Show and compare TMB AI OS version sources.",
     )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="Emit machine-readable JSON output.",
+    )
     parser.set_defaults(handler=run)
 
 
@@ -142,10 +150,23 @@ def format_report(info: VersionInfo) -> str:
     )
 
 
+def build_json_payload(info: VersionInfo) -> dict[str, Any]:
+    """Build the machine-readable version response."""
+
+    return build_envelope(
+        command="version",
+        status="ok",
+        data={
+            "package_version": info.package_version,
+            "module_version": info.module_version,
+            "latest_git_tag": info.latest_tag,
+            "synchronized": info.synchronized,
+        },
+    )
+
+
 def run(args: Any) -> int:
     """Display current project version information."""
-
-    del args
 
     try:
         info = VersionService(ROOT).collect()
@@ -153,5 +174,9 @@ def run(args: Any) -> int:
         print(f"Version inspection FAILED: {exc}")
         return 1
 
-    print(format_report(info))
+    if getattr(args, "json_output", False):
+        emit_json(build_json_payload(info))
+    else:
+        print(format_report(info))
+
     return 0
