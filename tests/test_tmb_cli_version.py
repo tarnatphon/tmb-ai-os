@@ -1,3 +1,4 @@
+import json
 import subprocess
 from pathlib import Path
 
@@ -8,6 +9,7 @@ from tools.tmb import main
 from tools.tmb.commands.version import (
     VersionInfo,
     VersionService,
+    build_json_payload,
     format_report,
 )
 
@@ -112,3 +114,58 @@ def test_version_command_dispatches(
 
     assert main(["version"]) == 0
     assert "Status          : OK" in capsys.readouterr().out
+
+
+def test_build_json_payload_uses_stable_envelope() -> None:
+    payload = build_json_payload(
+        VersionInfo(
+            package_version="0.1.0",
+            module_version="0.1.0",
+            latest_tag="v0.7.1",
+        )
+    )
+
+    assert payload == {
+        "schema_version": 1,
+        "command": "version",
+        "status": "ok",
+        "data": {
+            "package_version": "0.1.0",
+            "module_version": "0.1.0",
+            "latest_git_tag": "v0.7.1",
+            "synchronized": False,
+        },
+    }
+
+
+def test_version_json_command_outputs_json_only(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        version_command.VersionService,
+        "collect",
+        lambda self: VersionInfo(
+            package_version="0.1.0",
+            module_version="0.1.0",
+            latest_tag="v0.7.1",
+        ),
+    )
+
+    assert main(["version", "--json"]) == 0
+
+    output = capsys.readouterr().out
+    payload = json.loads(output)
+
+    assert payload["schema_version"] == 1
+    assert payload["command"] == "version"
+    assert payload["status"] == "ok"
+    assert payload["data"] == {
+        "package_version": "0.1.0",
+        "module_version": "0.1.0",
+        "latest_git_tag": "v0.7.1",
+        "synchronized": False,
+    }
+
+    assert "TMB Version" not in output
+    assert "OUT OF SYNC" not in output
