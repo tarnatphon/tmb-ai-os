@@ -13,6 +13,8 @@ from tools.patch_engine.validator import (
     validate_python_structure,
 )
 
+ROOT = Path(__file__).resolve().parents[1]
+
 
 def test_parse_python_source_rejects_invalid_syntax() -> None:
     try:
@@ -286,6 +288,24 @@ def test_validate_spec_command_rejects_escaping_validation_targets(tmp_path: Pat
     )
 
     assert main(["validate-spec", "--root", str(tmp_path), "--spec", str(spec)]) == 1
+
+
+def test_repository_patch_engine_example_spec_validates() -> None:
+    target = ROOT / "work" / "patch_engine_example.py"
+
+    assert (
+        main(
+            [
+                "validate-spec",
+                "--root",
+                str(ROOT),
+                "--spec",
+                str(ROOT / "specs" / "patch-engine-example.json"),
+            ],
+        )
+        == 0
+    )
+    assert not target.exists()
 
 
 def test_apply_json_spec_rejects_targets_outside_root(tmp_path: Path) -> None:

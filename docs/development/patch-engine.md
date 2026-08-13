@@ -7,19 +7,19 @@ The patch engine applies repository changes from JSON specs with validation and 
 Validate a spec without writing files:
 
 ```bash
-python -m tools.patch_engine validate-spec --spec specs/example.json
+python -m tools.patch_engine validate-spec --spec specs/patch-engine-example.json
 ```
 
 Validate a spec and preview whether it is structurally safe:
 
 ```bash
-python -m tools.patch_engine apply --spec specs/example.json --dry-run
+python -m tools.patch_engine apply --spec specs/patch-engine-example.json --dry-run
 ```
 
 Apply a spec and run the validation plan declared by the spec:
 
 ```bash
-python -m tools.patch_engine apply --spec specs/example.json
+python -m tools.patch_engine apply --spec specs/patch-engine-example.json
 ```
 
 Run ad hoc validation checks:

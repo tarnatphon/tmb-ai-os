@@ -1,0 +1,19 @@
+{
+  "operations": [
+    {
+      "type": "replace_file",
+      "path": "work/patch_engine_example.py",
+      "content": "def run() -> int:\n    return 0\n",
+      "python": {
+        "functions": ["run"],
+        "classes": []
+      }
+    }
+  ],
+  "validation": {
+    "python_paths": ["work/patch_engine_example.py"],
+    "test_paths": [],
+    "ruff": false,
+    "pytest": false
+  }
+}
