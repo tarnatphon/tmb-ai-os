@@ -145,6 +145,34 @@ def test_apply_json_spec_runs_post_apply_compile_validation(tmp_path: Path) -> N
     assert target.read_text(encoding="utf-8") == "def run() -> int:\n    return 0\n"
 
 
+def test_apply_json_spec_runs_spec_level_compile_validation(tmp_path: Path) -> None:
+    target = tmp_path / "generated.py"
+    spec = tmp_path / "patch.json"
+    spec.write_text(
+        json.dumps(
+            {
+                "operations": [
+                    {
+                        "type": "replace_file",
+                        "path": "generated.py",
+                        "content": "def run() -> int:\n    return 0\n",
+                        "python": {"functions": ["run"]},
+                    },
+                ],
+                "validation": {
+                    "python_paths": ["generated.py"],
+                    "ruff": False,
+                    "pytest": False,
+                },
+            },
+        ),
+        encoding="utf-8",
+    )
+
+    assert main(["apply", "--root", str(tmp_path), "--spec", str(spec)]) == 0
+    assert target.read_text(encoding="utf-8") == "def run() -> int:\n    return 0\n"
+
+
 def test_apply_json_spec_reports_post_apply_validation_failure(tmp_path: Path) -> None:
     target = tmp_path / "generated.py"
     spec = tmp_path / "patch.json"
@@ -180,6 +208,31 @@ def test_apply_json_spec_reports_post_apply_validation_failure(tmp_path: Path) -
         == 1
     )
     assert not target.exists()
+
+
+def test_apply_json_spec_dry_run_rejects_escaping_validation_targets(tmp_path: Path) -> None:
+    spec = tmp_path / "patch.json"
+    spec.write_text(
+        json.dumps(
+            {
+                "operations": [
+                    {
+                        "type": "replace_file",
+                        "path": "generated.py",
+                        "content": "def run() -> int:\n    return 0\n",
+                    },
+                ],
+                "validation": {
+                    "python_paths": ["../outside.py"],
+                    "ruff": False,
+                    "pytest": False,
+                },
+            },
+        ),
+        encoding="utf-8",
+    )
+
+    assert main(["apply", "--root", str(tmp_path), "--spec", str(spec), "--dry-run"]) == 1
 
 
 def test_apply_json_spec_rejects_targets_outside_root(tmp_path: Path) -> None:

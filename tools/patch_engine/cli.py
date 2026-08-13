@@ -6,7 +6,12 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from . import PatchEngineError, PatchValidationError
-from .models import ReplaceFileOperation, parse_replace_file_operation
+from .models import (
+    ReplaceFileOperation,
+    ValidationPlan,
+    parse_replace_file_operation,
+    parse_validation_plan,
+)
 from .parser import parse_python_file, parse_python_source
 from .runner import CommandResult, run_validation_plan
 from .transaction import PatchTransaction
@@ -95,7 +100,7 @@ def run_apply(args: argparse.Namespace) -> int:
     """Apply a JSON patch spec."""
 
     root = Path(args.root).resolve()
-    operations = _load_operations(Path(args.spec), root=root)
+    operations, validation_plan = _load_spec(Path(args.spec), root=root)
 
     for operation in operations:
         if operation.python is not None:
@@ -103,6 +108,7 @@ def run_apply(args: argparse.Namespace) -> int:
             validate_python_structure(module, operation.python)
 
     if args.dry_run:
+        _validate_validation_targets(root=root, validation_plan=validation_plan)
         print(f"Validated {len(operations)} operation(s)")
         return 0
 
@@ -113,7 +119,11 @@ def run_apply(args: argparse.Namespace) -> int:
     )
 
     try:
-        validation_results = _run_post_apply_validation(args, root=root)
+        validation_results = _run_post_apply_validation(
+            args,
+            root=root,
+            validation_plan=validation_plan,
+        )
     except PatchValidationError:
         transaction.rollback()
         raise
@@ -152,9 +162,10 @@ def _run_post_apply_validation(
     args: argparse.Namespace,
     *,
     root: Path,
+    validation_plan: ValidationPlan,
 ) -> tuple[CommandResult, ...]:
-    python_paths = tuple(Path(path) for path in args.python_path)
-    test_paths = tuple(Path(path) for path in args.test_path)
+    python_paths = validation_plan.python_paths + tuple(Path(path) for path in args.python_path)
+    test_paths = validation_plan.test_paths + tuple(Path(path) for path in args.test_path)
 
     if not python_paths and not test_paths:
         return ()
@@ -163,12 +174,26 @@ def _run_post_apply_validation(
         root=root,
         python_paths=python_paths,
         test_paths=test_paths,
-        run_ruff=not args.skip_ruff,
-        run_pytest=not args.skip_pytest and bool(test_paths),
+        run_ruff=validation_plan.run_ruff and not args.skip_ruff,
+        run_pytest=validation_plan.run_pytest and not args.skip_pytest and bool(test_paths),
     )
 
 
-def _load_operations(spec_path: Path, *, root: Path) -> tuple[ReplaceFileOperation, ...]:
+def _validate_validation_targets(*, root: Path, validation_plan: ValidationPlan) -> None:
+    for path in validation_plan.python_paths + validation_plan.test_paths:
+        resolved_path = (root / path).resolve() if not path.is_absolute() else path.resolve()
+        try:
+            resolved_path.relative_to(root.resolve())
+        except ValueError as exc:
+            message = f"validation target escapes repository root: {path}"
+            raise PatchValidationError(message) from exc
+
+
+def _load_spec(
+    spec_path: Path,
+    *,
+    root: Path,
+) -> tuple[tuple[ReplaceFileOperation, ...], ValidationPlan]:
     try:
         raw = json.loads(spec_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
@@ -187,4 +212,4 @@ def _load_operations(spec_path: Path, *, root: Path) -> tuple[ReplaceFileOperati
             raise PatchValidationError("each operation must be an object")
         parsed.append(parse_replace_file_operation(operation, root=root))
 
-    return tuple(parsed)
+    return tuple(parsed), parse_validation_plan(raw.get("validation"))
