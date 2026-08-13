@@ -24,6 +24,18 @@ def test_toolchain_check_detects_one_missing_tool() -> None:
     assert result.message == "Missing development tools: ruff"
 
 
+def test_toolchain_check_uses_configured_executable_directory(tmp_path) -> None:
+    for tool in REQUIRED_TOOLS:
+        (tmp_path / tool).write_text("", encoding="utf-8")
+
+    result = ToolchainCheck(
+        executable_dir=tmp_path,
+        finder=lambda name: None,
+    ).run()
+
+    assert result.passed is True
+
+
 def test_toolchain_check_detects_multiple_missing_tools() -> None:
     missing = {"mypy", "pytest"}
     check = ToolchainCheck(

@@ -3,6 +3,7 @@ from __future__ import annotations
 import shutil
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from ..validation import ValidationResult
 
@@ -21,6 +22,7 @@ ToolFinder = Callable[[str], str | None]
 class ToolchainCheck:
     """Check that required development commands are available."""
 
+    executable_dir: Path | None = None
     finder: ToolFinder = field(
         default=shutil.which,
         repr=False,
@@ -30,7 +32,7 @@ class ToolchainCheck:
     def run(self) -> ValidationResult:
         """Validate the required development toolchain."""
 
-        missing_tools = sorted(tool for tool in REQUIRED_TOOLS if self.finder(tool) is None)
+        missing_tools = sorted(tool for tool in REQUIRED_TOOLS if self._find(tool) is None)
 
         if missing_tools:
             return ValidationResult(
@@ -45,3 +47,17 @@ class ToolchainCheck:
             message="Development toolchain is ready.",
             severity="info",
         )
+
+    def _find(self, tool: str) -> str | None:
+        found = self.finder(tool)
+        if found is not None:
+            return found
+
+        if self.executable_dir is None:
+            return None
+
+        candidate = self.executable_dir / tool
+        if candidate.exists():
+            return str(candidate)
+
+        return None
