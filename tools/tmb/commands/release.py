@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from ..check_registry import create_default_checks
+from ..output import build_envelope, emit_json
 from ..validation import run_checks
 from .version import VersionInfo, VersionService
 
@@ -101,6 +102,12 @@ def register(subparsers: Any) -> None:
         help="Check whether TMB AI OS is ready for release.",
         description="Check whether TMB AI OS is ready for release.",
     )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="Emit machine-readable JSON output.",
+    )
     parser.set_defaults(handler=run)
 
 
@@ -125,10 +132,27 @@ def format_report(readiness: ReleaseReadiness) -> str:
     return "\n".join(lines)
 
 
+def build_json_payload(readiness: ReleaseReadiness) -> dict[str, Any]:
+    """Build the machine-readable release-readiness response."""
+
+    return build_envelope(
+        command="release",
+        status="ok" if readiness.ready else "failed",
+        data={
+            "ready": readiness.ready,
+            "reasons": list(readiness.reasons),
+            "version": {
+                "package_version": readiness.version_info.package_version,
+                "module_version": readiness.version_info.module_version,
+                "latest_git_tag": readiness.version_info.latest_tag,
+                "synchronized": readiness.version_info.synchronized,
+            },
+        },
+    )
+
+
 def run(args: argparse.Namespace) -> int:
     """Display the release-readiness report."""
-
-    del args
 
     try:
         readiness = ReleaseService(ROOT).inspect()
@@ -136,5 +160,9 @@ def run(args: argparse.Namespace) -> int:
         print(f"Release inspection FAILED: {exc}")
         return 1
 
-    print(format_report(readiness))
+    if getattr(args, "json_output", False):
+        emit_json(build_json_payload(readiness))
+    else:
+        print(format_report(readiness))
+
     return 0 if readiness.ready else 1

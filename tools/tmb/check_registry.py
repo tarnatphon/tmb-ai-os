@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from .checks import (
@@ -20,5 +21,5 @@ def create_default_checks(root: Path) -> tuple[ValidationCheck, ...]:
         PythonEnvironmentCheck(root),
         GitRepositoryCheck(root),
         WorkflowStructureCheck(root),
-        ToolchainCheck(),
+        ToolchainCheck(executable_dir=Path(sys.executable).parent),
     )
