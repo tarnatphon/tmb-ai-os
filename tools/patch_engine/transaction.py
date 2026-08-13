@@ -22,7 +22,7 @@ class PatchTransaction:
         self._backups: dict[Path, str | None] = {}
         self._committed = False
 
-    def apply(self, replacements: tuple[FileReplacement, ...]) -> None:
+    def apply(self, replacements: tuple[FileReplacement, ...], *, commit: bool = True) -> None:
         """Apply all replacements transactionally."""
 
         try:
@@ -32,6 +32,12 @@ class PatchTransaction:
         except OSError as exc:
             self.rollback()
             raise TransactionError(f"failed to apply patch transaction: {exc}") from exc
+
+        if commit:
+            self.commit()
+
+    def commit(self) -> None:
+        """Mark the transaction as successful."""
 
         self._committed = True
 

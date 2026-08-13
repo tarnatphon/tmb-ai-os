@@ -84,6 +84,104 @@ def test_apply_json_spec_replaces_file_after_python_validation(tmp_path: Path) -
     assert target.read_text(encoding="utf-8") == "def run() -> int:\n    return 0\n"
 
 
+def test_apply_json_spec_dry_run_validates_without_writing(tmp_path: Path) -> None:
+    target = tmp_path / "generated.py"
+    spec = tmp_path / "patch.json"
+    spec.write_text(
+        json.dumps(
+            {
+                "operations": [
+                    {
+                        "type": "replace_file",
+                        "path": "generated.py",
+                        "content": "def run() -> int:\n    return 0\n",
+                        "python": {"functions": ["run"]},
+                    },
+                ],
+            },
+        ),
+        encoding="utf-8",
+    )
+
+    assert main(["apply", "--root", str(tmp_path), "--spec", str(spec), "--dry-run"]) == 0
+    assert not target.exists()
+
+
+def test_apply_json_spec_runs_post_apply_compile_validation(tmp_path: Path) -> None:
+    target = tmp_path / "generated.py"
+    spec = tmp_path / "patch.json"
+    spec.write_text(
+        json.dumps(
+            {
+                "operations": [
+                    {
+                        "type": "replace_file",
+                        "path": "generated.py",
+                        "content": "def run() -> int:\n    return 0\n",
+                        "python": {"functions": ["run"]},
+                    },
+                ],
+            },
+        ),
+        encoding="utf-8",
+    )
+
+    assert (
+        main(
+            [
+                "apply",
+                "--root",
+                str(tmp_path),
+                "--spec",
+                str(spec),
+                "--python-path",
+                "generated.py",
+                "--skip-ruff",
+                "--skip-pytest",
+            ],
+        )
+        == 0
+    )
+    assert target.read_text(encoding="utf-8") == "def run() -> int:\n    return 0\n"
+
+
+def test_apply_json_spec_reports_post_apply_validation_failure(tmp_path: Path) -> None:
+    target = tmp_path / "generated.py"
+    spec = tmp_path / "patch.json"
+    spec.write_text(
+        json.dumps(
+            {
+                "operations": [
+                    {
+                        "type": "replace_file",
+                        "path": "generated.py",
+                        "content": "value = 1\n",
+                    },
+                ],
+            },
+        ),
+        encoding="utf-8",
+    )
+
+    assert (
+        main(
+            [
+                "apply",
+                "--root",
+                str(tmp_path),
+                "--spec",
+                str(spec),
+                "--python-path",
+                "../outside.py",
+                "--skip-ruff",
+                "--skip-pytest",
+            ],
+        )
+        == 1
+    )
+    assert not target.exists()
+
+
 def test_apply_json_spec_rejects_targets_outside_root(tmp_path: Path) -> None:
     spec = tmp_path / "patch.json"
     spec.write_text(
