@@ -37,6 +37,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     apply_parser.add_argument("--spec", required=True)
     apply_parser.add_argument("--root", default=".")
+    apply_parser.add_argument("--dry-run", action="store_true")
+    apply_parser.add_argument("--python-path", action="append", default=[])
+    apply_parser.add_argument("--test-path", action="append", default=[])
+    apply_parser.add_argument("--skip-ruff", action="store_true")
+    apply_parser.add_argument("--skip-pytest", action="store_true")
     apply_parser.set_defaults(handler=run_apply)
 
     check_parser = subparsers.add_parser(
@@ -97,7 +102,26 @@ def run_apply(args: argparse.Namespace) -> int:
             module = parse_python_source(operation.content, path=operation.path)
             validate_python_structure(module, operation.python)
 
-    PatchTransaction().apply(tuple(operation.to_replacement() for operation in operations))
+    if args.dry_run:
+        print(f"Validated {len(operations)} operation(s)")
+        return 0
+
+    transaction = PatchTransaction()
+    transaction.apply(
+        tuple(operation.to_replacement() for operation in operations),
+        commit=False,
+    )
+
+    try:
+        validation_results = _run_post_apply_validation(args, root=root)
+    except PatchValidationError:
+        transaction.rollback()
+        raise
+
+    transaction.commit()
+    for result in validation_results:
+        print(_format_result(result))
+
     print(f"Applied {len(operations)} operation(s)")
     return 0
 
@@ -122,6 +146,26 @@ def run_check(args: argparse.Namespace) -> int:
 def _format_result(result: CommandResult) -> str:
     status = "PASS" if result.passed else "FAIL"
     return f"[{status}] {result.name}"
+
+
+def _run_post_apply_validation(
+    args: argparse.Namespace,
+    *,
+    root: Path,
+) -> tuple[CommandResult, ...]:
+    python_paths = tuple(Path(path) for path in args.python_path)
+    test_paths = tuple(Path(path) for path in args.test_path)
+
+    if not python_paths and not test_paths:
+        return ()
+
+    return run_validation_plan(
+        root=root,
+        python_paths=python_paths,
+        test_paths=test_paths,
+        run_ruff=not args.skip_ruff,
+        run_pytest=not args.skip_pytest and bool(test_paths),
+    )
 
 
 def _load_operations(spec_path: Path, *, root: Path) -> tuple[ReplaceFileOperation, ...]:
