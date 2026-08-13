@@ -10,6 +10,16 @@ from .validator import PythonStructureRequirement
 
 
 @dataclass(frozen=True, slots=True)
+class ValidationPlan:
+    """Validation checks requested by a patch spec."""
+
+    python_paths: tuple[Path, ...] = ()
+    test_paths: tuple[Path, ...] = ()
+    run_ruff: bool = True
+    run_pytest: bool = True
+
+
+@dataclass(frozen=True, slots=True)
 class ReplaceFileOperation:
     """Spec operation that replaces one file after validation."""
 
@@ -75,3 +85,42 @@ def _parse_string_tuple(raw: object, *, field_name: str) -> tuple[str, ...]:
     if not isinstance(raw, list) or not all(isinstance(item, str) for item in raw):
         raise PatchValidationError(f"{field_name} must be a list of strings")
     return tuple(raw)
+
+
+def parse_validation_plan(raw: object) -> ValidationPlan:
+    """Parse the optional spec-level validation plan."""
+
+    if raw is None:
+        return ValidationPlan()
+    if not isinstance(raw, dict):
+        raise PatchValidationError("validation must be an object")
+
+    python_paths = tuple(
+        Path(path)
+        for path in _parse_string_tuple(
+            raw.get("python_paths"),
+            field_name="validation.python_paths",
+        )
+    )
+    test_paths = tuple(
+        Path(path)
+        for path in _parse_string_tuple(
+            raw.get("test_paths"),
+            field_name="validation.test_paths",
+        )
+    )
+
+    return ValidationPlan(
+        python_paths=python_paths,
+        test_paths=test_paths,
+        run_ruff=_parse_bool(raw.get("ruff"), field_name="validation.ruff", default=True),
+        run_pytest=_parse_bool(raw.get("pytest"), field_name="validation.pytest", default=True),
+    )
+
+
+def _parse_bool(raw: object, *, field_name: str, default: bool) -> bool:
+    if raw is None:
+        return default
+    if not isinstance(raw, bool):
+        raise PatchValidationError(f"{field_name} must be a boolean")
+    return raw
