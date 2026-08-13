@@ -235,6 +235,59 @@ def test_apply_json_spec_dry_run_rejects_escaping_validation_targets(tmp_path: P
     assert main(["apply", "--root", str(tmp_path), "--spec", str(spec), "--dry-run"]) == 1
 
 
+def test_validate_spec_command_validates_without_writing(tmp_path: Path) -> None:
+    target = tmp_path / "generated.py"
+    spec = tmp_path / "patch.json"
+    spec.write_text(
+        json.dumps(
+            {
+                "operations": [
+                    {
+                        "type": "replace_file",
+                        "path": "generated.py",
+                        "content": "def run() -> int:\n    return 0\n",
+                        "python": {"functions": ["run"]},
+                    },
+                ],
+                "validation": {
+                    "python_paths": ["generated.py"],
+                    "ruff": False,
+                    "pytest": False,
+                },
+            },
+        ),
+        encoding="utf-8",
+    )
+
+    assert main(["validate-spec", "--root", str(tmp_path), "--spec", str(spec)]) == 0
+    assert not target.exists()
+
+
+def test_validate_spec_command_rejects_escaping_validation_targets(tmp_path: Path) -> None:
+    spec = tmp_path / "patch.json"
+    spec.write_text(
+        json.dumps(
+            {
+                "operations": [
+                    {
+                        "type": "replace_file",
+                        "path": "generated.py",
+                        "content": "def run() -> int:\n    return 0\n",
+                    },
+                ],
+                "validation": {
+                    "test_paths": ["../outside_test.py"],
+                    "ruff": False,
+                    "pytest": False,
+                },
+            },
+        ),
+        encoding="utf-8",
+    )
+
+    assert main(["validate-spec", "--root", str(tmp_path), "--spec", str(spec)]) == 1
+
+
 def test_apply_json_spec_rejects_targets_outside_root(tmp_path: Path) -> None:
     spec = tmp_path / "patch.json"
     spec.write_text(

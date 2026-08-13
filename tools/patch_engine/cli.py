@@ -49,6 +49,14 @@ def build_parser() -> argparse.ArgumentParser:
     apply_parser.add_argument("--skip-pytest", action="store_true")
     apply_parser.set_defaults(handler=run_apply)
 
+    spec_parser = subparsers.add_parser(
+        "validate-spec",
+        help="Validate a JSON patch spec without writing files.",
+    )
+    spec_parser.add_argument("--spec", required=True)
+    spec_parser.add_argument("--root", default=".")
+    spec_parser.set_defaults(handler=run_validate_spec)
+
     check_parser = subparsers.add_parser(
         "check",
         help="Run patch validation checks.",
@@ -133,6 +141,22 @@ def run_apply(args: argparse.Namespace) -> int:
         print(_format_result(result))
 
     print(f"Applied {len(operations)} operation(s)")
+    return 0
+
+
+def run_validate_spec(args: argparse.Namespace) -> int:
+    """Validate a JSON patch spec without applying it."""
+
+    root = Path(args.root).resolve()
+    operations, validation_plan = _load_spec(Path(args.spec), root=root)
+
+    for operation in operations:
+        if operation.python is not None:
+            module = parse_python_source(operation.content, path=operation.path)
+            validate_python_structure(module, operation.python)
+
+    _validate_validation_targets(root=root, validation_plan=validation_plan)
+    print(f"Spec validation PASSED ({len(operations)} operation(s))")
     return 0
 
 
