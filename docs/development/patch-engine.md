@@ -57,6 +57,7 @@ python -m tools.patch_engine check \
 ## Safety Rules
 
 - Patch targets must stay inside the repository root.
+- Patch targets must be unique within one spec.
 - Validation targets must stay inside the repository root.
 - Python operations can require top-level functions and classes before writing.
 - Failed writes roll back previous writes in the same transaction.

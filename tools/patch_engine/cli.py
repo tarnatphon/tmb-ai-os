@@ -236,4 +236,14 @@ def _load_spec(
             raise PatchValidationError("each operation must be an object")
         parsed.append(parse_replace_file_operation(operation, root=root))
 
+    _validate_unique_operation_targets(tuple(parsed))
     return tuple(parsed), parse_validation_plan(raw.get("validation"))
+
+
+def _validate_unique_operation_targets(operations: tuple[ReplaceFileOperation, ...]) -> None:
+    seen: set[Path] = set()
+
+    for operation in operations:
+        if operation.path in seen:
+            raise PatchValidationError(f"duplicate patch target: {operation.path}")
+        seen.add(operation.path)
