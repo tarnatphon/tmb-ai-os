@@ -230,6 +230,8 @@ def _load_spec(
     operations = raw.get("operations")
     if not isinstance(operations, list):
         raise PatchValidationError("patch spec requires an operations list")
+    if not operations:
+        raise PatchValidationError("patch spec requires at least one operation")
 
     parsed: list[ReplaceFileOperation] = []
     for operation in operations:
