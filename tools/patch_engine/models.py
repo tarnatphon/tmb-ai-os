@@ -84,6 +84,8 @@ def _parse_string_tuple(raw: object, *, field_name: str) -> tuple[str, ...]:
         return ()
     if not isinstance(raw, list) or not all(isinstance(item, str) for item in raw):
         raise PatchValidationError(f"{field_name} must be a list of strings")
+    if not all(raw):
+        raise PatchValidationError(f"{field_name} entries must be non-empty strings")
     return tuple(raw)
 
 
