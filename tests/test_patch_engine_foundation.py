@@ -265,6 +265,13 @@ def test_validate_spec_command_validates_without_writing(tmp_path: Path) -> None
     assert not target.exists()
 
 
+def test_validate_spec_command_rejects_empty_operations(tmp_path: Path) -> None:
+    spec = tmp_path / "patch.json"
+    spec.write_text(json.dumps({"operations": []}), encoding="utf-8")
+
+    assert main(["validate-spec", "--root", str(tmp_path), "--spec", str(spec)]) == 1
+
+
 def test_validate_spec_command_rejects_escaping_validation_targets(tmp_path: Path) -> None:
     spec = tmp_path / "patch.json"
     spec.write_text(
