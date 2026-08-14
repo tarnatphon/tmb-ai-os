@@ -290,6 +290,31 @@ def test_validate_spec_command_rejects_escaping_validation_targets(tmp_path: Pat
     assert main(["validate-spec", "--root", str(tmp_path), "--spec", str(spec)]) == 1
 
 
+def test_validate_spec_command_rejects_duplicate_patch_targets(tmp_path: Path) -> None:
+    spec = tmp_path / "patch.json"
+    spec.write_text(
+        json.dumps(
+            {
+                "operations": [
+                    {
+                        "type": "replace_file",
+                        "path": "generated.py",
+                        "content": "value = 1\n",
+                    },
+                    {
+                        "type": "replace_file",
+                        "path": "generated.py",
+                        "content": "value = 2\n",
+                    },
+                ],
+            },
+        ),
+        encoding="utf-8",
+    )
+
+    assert main(["validate-spec", "--root", str(tmp_path), "--spec", str(spec)]) == 1
+
+
 def test_repository_patch_engine_example_spec_validates() -> None:
     target = ROOT / "work" / "patch_engine_example.py"
 
