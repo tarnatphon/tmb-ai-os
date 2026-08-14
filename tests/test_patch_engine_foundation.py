@@ -272,6 +272,54 @@ def test_validate_spec_command_rejects_empty_operations(tmp_path: Path) -> None:
     assert main(["validate-spec", "--root", str(tmp_path), "--spec", str(spec)]) == 1
 
 
+def test_validate_spec_command_rejects_empty_python_requirement_names(
+    tmp_path: Path,
+) -> None:
+    spec = tmp_path / "patch.json"
+    spec.write_text(
+        json.dumps(
+            {
+                "operations": [
+                    {
+                        "type": "replace_file",
+                        "path": "generated.py",
+                        "content": "def run() -> int:\n    return 0\n",
+                        "python": {"functions": [""]},
+                    },
+                ],
+            },
+        ),
+        encoding="utf-8",
+    )
+
+    assert main(["validate-spec", "--root", str(tmp_path), "--spec", str(spec)]) == 1
+
+
+def test_validate_spec_command_rejects_empty_validation_targets(tmp_path: Path) -> None:
+    spec = tmp_path / "patch.json"
+    spec.write_text(
+        json.dumps(
+            {
+                "operations": [
+                    {
+                        "type": "replace_file",
+                        "path": "generated.py",
+                        "content": "def run() -> int:\n    return 0\n",
+                    },
+                ],
+                "validation": {
+                    "python_paths": [""],
+                    "ruff": False,
+                    "pytest": False,
+                },
+            },
+        ),
+        encoding="utf-8",
+    )
+
+    assert main(["validate-spec", "--root", str(tmp_path), "--spec", str(spec)]) == 1
+
+
 def test_validate_spec_command_rejects_escaping_validation_targets(tmp_path: Path) -> None:
     spec = tmp_path / "patch.json"
     spec.write_text(
