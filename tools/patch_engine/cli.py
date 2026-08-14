@@ -109,11 +109,7 @@ def run_apply(args: argparse.Namespace) -> int:
 
     root = Path(args.root).resolve()
     operations, validation_plan = _load_spec(Path(args.spec), root=root)
-
-    for operation in operations:
-        if operation.python is not None:
-            module = parse_python_source(operation.content, path=operation.path)
-            validate_python_structure(module, operation.python)
+    _validate_operations(operations)
 
     if args.dry_run:
         _validate_validation_targets(root=root, validation_plan=validation_plan)
@@ -149,11 +145,7 @@ def run_validate_spec(args: argparse.Namespace) -> int:
 
     root = Path(args.root).resolve()
     operations, validation_plan = _load_spec(Path(args.spec), root=root)
-
-    for operation in operations:
-        if operation.python is not None:
-            module = parse_python_source(operation.content, path=operation.path)
-            validate_python_structure(module, operation.python)
+    _validate_operations(operations)
 
     _validate_validation_targets(root=root, validation_plan=validation_plan)
     print(f"Spec validation PASSED ({len(operations)} operation(s))")
@@ -180,6 +172,15 @@ def run_check(args: argparse.Namespace) -> int:
 def _format_result(result: CommandResult) -> str:
     status = "PASS" if result.passed else "FAIL"
     return f"[{status}] {result.name}"
+
+
+def _validate_operations(operations: tuple[ReplaceFileOperation, ...]) -> None:
+    for operation in operations:
+        if operation.python is None:
+            continue
+
+        module = parse_python_source(operation.content, path=operation.path)
+        validate_python_structure(module, operation.python)
 
 
 def _run_post_apply_validation(
